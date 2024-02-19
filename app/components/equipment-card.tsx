@@ -11,8 +11,9 @@ export function EquipmentCard({ equipment }: { equipment: any }) {
           <select
             id="quantity"
             name="quantity"
-            className="bg-black rounded-md border border-gray-300 text-left text-2xl font-bold text-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm p-2"
+            className="bg-black rounded-md border border-gray-300 text-left text-2xl font-bold text-white shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 sm:text-sm p-2"
           >
+            <option value={0}>0</option>
             <option value={1}>1</option>
             <option value={2}>2</option>
             <option value={3}>3</option>
