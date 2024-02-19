@@ -12,18 +12,14 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="max-w-5xl w-full justify-center font-mono">
-        <div className="mt-4 space-y-4">
+        <div className="my-16 space-y-4">
+          <h1 className="text-white text-6xl">Mt Aptos</h1>
           <p className="text-xl">
             Welcome to Base Camp{" "}
             <span className="text-purple-600">Cafeteria.</span>
           </p>
-          <h1 className="text-white text-6xl">Mt Aptos</h1>
-          <p className="italic text-xs">
-            Mt Aptos is a game about assembling a crew of explorers, equiping
-            them and planning your expedition.
-          </p>
         </div>
-        <div className="mt-8 space-y-6">
+        <div className="my-16 space-y-6">
           <p className="text-white text-xl">How many days will you attempt?</p>
           <div>
             <div className="mt-2">
@@ -53,7 +49,7 @@ export default function Home() {
             })}
           </div>
         </div>
-        <div className="mt-8 space-y-6">
+        <div className="my-16 space-y-6">
           <p className="text-white text-xl pb-2">
             Select your team for the trip
           </p>
@@ -67,9 +63,9 @@ export default function Home() {
             })}
           </div>
         </div>
-        <div className="mt-8 space-y-6">
+        <div className="my-16 space-y-6">
           <p className="text-white text-xl pb-2">Select Gear and Equipment</p>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {equipment.map(function (item) {
               return (
                 <div key={item.name}>
@@ -79,7 +75,7 @@ export default function Home() {
             })}
           </div>
         </div>
-        <div className="mt-16 flex justify-between items-center p-8 border">
+        <div className="my-16 flex justify-between items-center p-8 border">
           <div>
             <p className="text-white text-3xl">Ready to go?</p>
           </div>
