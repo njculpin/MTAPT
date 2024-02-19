@@ -14,4 +14,5 @@ interface CharacterAttributes {
 
 interface SkillAttributes {
   name: string;
+  description: string;
 }

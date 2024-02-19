@@ -1,4 +1,4 @@
-export function WeatherCard({ weather }: { weather: Condition }) {
+export function WeatherCard({ weather }: { weather: any }) {
   return (
     <div className="flex justify-center items-center p-2">
       <WeatherIcon weather={weather} />
@@ -6,7 +6,7 @@ export function WeatherCard({ weather }: { weather: Condition }) {
   );
 }
 
-function WeatherIcon({ weather }: { weather: Condition }) {
+function WeatherIcon({ weather }: { weather: any }) {
   switch (weather.name) {
     case "Sunny":
       return (

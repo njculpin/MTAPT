@@ -5,8 +5,9 @@ export const characters = [
     skills: [
       {
         name: "Maps",
+        description: "read a map",
       },
-      { name: "Compass" },
+      { name: "Compass", description: "read a compass" },
     ],
     strength: 5,
     health: 10,
@@ -23,8 +24,9 @@ export const characters = [
     skills: [
       {
         name: "Cooking",
+        description: "cook a great meal",
       },
-      { name: "Fire" },
+      { name: "Fire", description: "start a roaring fire" },
     ],
     strength: 5,
     health: 10,

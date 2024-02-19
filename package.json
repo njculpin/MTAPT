@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.7.0",
+    "@headlessui/react": "^1.7.18",
     "@identity-connect/api": "^0.4.1",
     "@identity-connect/dapp-sdk": "^0.4.3",
     "@identity-connect/wallet-api": "^0.0.4",
