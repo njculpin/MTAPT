@@ -79,7 +79,7 @@ export default function Home() {
             })}
           </div>
         </div>
-        <div className="mt-6 flex justify-between items-center p-8 border">
+        <div className="mt-16 flex justify-between items-center p-8 border">
           <div>
             <p className="text-white text-3xl">Ready to go?</p>
           </div>
