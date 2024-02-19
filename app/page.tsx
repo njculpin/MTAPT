@@ -1,14 +1,12 @@
 import { getWeather } from "./models";
 import { conditions, characters, equipment } from "./data";
-import { WeatherCard } from "./components";
-import { convertNumberToDays } from "./utils";
-import { CharacterCard } from "./components/character-card";
-import { EquipmentCard } from "./components/equipment-card";
+import { WeatherCard, CharacterCard, EquipmentCard } from "./components";
+import { numberToString } from "./utils";
 
 export default function Home() {
   const days = 5;
   const weathers = getWeather({ conditions, days });
-  const day = convertNumberToDays({ days });
+  const day = numberToString(days);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="max-w-5xl w-full justify-center font-mono">
@@ -20,7 +18,15 @@ export default function Home() {
           </p>
         </div>
         <div className="my-16 space-y-6">
-          <p className="text-white text-xl">How many days will you attempt?</p>
+          <div className="space-y-4">
+            <p className="text-white text-xl">
+              How many days will you attempt?
+            </p>
+            <p className="text-white text-md italic">
+              1 day is equal to 1 block.
+            </p>
+          </div>
+
           <div>
             <div className="mt-2">
               <input
@@ -53,7 +59,7 @@ export default function Home() {
           <p className="text-white text-xl pb-2">
             Select your team for the trip
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {characters.map(function (item: CharacterAttributes) {
               return (
                 <div key={item.name}>
