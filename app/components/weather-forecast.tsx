@@ -16,7 +16,7 @@ export async function WeatherForecast({ days }: { days: number }) {
           Aptos Blockchain or approximately 2 hours.
         </p>
       </div>
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-3">
         {forecast.map(function (weather, wIdx: number) {
           return (
             <div

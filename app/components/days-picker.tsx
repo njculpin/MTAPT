@@ -33,7 +33,7 @@ export function DaysPicker() {
         <RadioGroup.Label className="sr-only">
           Choose the number of days for your trip
         </RadioGroup.Label>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-7">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-3">
           {options.map((option) => (
             <RadioGroup.Option
               key={option.name}

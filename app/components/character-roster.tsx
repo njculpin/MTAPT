@@ -15,7 +15,7 @@ export function CharacterRoster({ characters }: { characters: Character[] }) {
           case, we might have bigger fish to fry.
         </p>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {characters.map((character: Character) => (
           <div key={character.id}>
             <CharacterCard character={character} />

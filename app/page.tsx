@@ -32,6 +32,17 @@ export default function Home() {
             Depart
           </button>
         </div>
+        <div className="my-16 flex justify-between items-center p-8 bg-gray-950">
+          <div>
+            <p className="text-white text-3xl">Need to rest?</p>
+          </div>
+          <button
+            type="button"
+            className="rounded-md bg-white/10 px-3.5 py-2.5 text-4xl font-semibold text-white shadow-sm hover:bg-gray-700"
+          >
+            Rest
+          </button>
+        </div>
       </div>
     </main>
   );
