@@ -1,11 +1,11 @@
 import { getWeather } from "./models";
-import { conditions, characters, equipment } from "./data";
+import { weather, characters, equipment } from "./data";
 import { WeatherCard, CharacterCard, EquipmentCard } from "./components";
 import { numberToString } from "./utils";
 
 export default function Home() {
   const days = 5;
-  const weathers = getWeather({ conditions, days });
+  const weathers = getWeather({ weather, days });
   const day = numberToString(days);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
