@@ -14,7 +14,7 @@ export const characters = [
   {
     id: 2,
     name: "Trevor",
-    skills: "Transportation Expert",
+    skills: "Logistics Expert",
     health: 4,
   },
   {
@@ -38,8 +38,8 @@ export const characters = [
   {
     id: 6,
     name: "Lauren",
-    skills: "Recruiter",
-    health: 4,
+    skills: "Linguist",
+    health: 1,
   },
   {
     id: 7,
@@ -57,11 +57,17 @@ export const characters = [
     id: 9,
     name: "Jace",
     skills: "Archaeologist",
-    health: 4,
+    health: 2,
   },
   {
     id: 10,
     name: "Daniel",
+    skills: "Doctor",
+    health: 4,
+  },
+  {
+    id: 10,
+    name: "Nick",
     skills: "Engineer",
     health: 4,
   },

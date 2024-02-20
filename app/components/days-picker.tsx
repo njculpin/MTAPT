@@ -43,7 +43,7 @@ export function DaysPicker() {
                   checked
                     ? "bg-gray-900 border border-gray-800"
                     : "bg-gray-950",
-                  "w-full flex flex-grow flex-col justify-center items-center p-4"
+                  "w-full flex flex-grow flex-col justify-center items-center p-4 hover:bg-gray-700"
                 )
               }
             >

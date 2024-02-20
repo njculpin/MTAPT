@@ -21,13 +21,13 @@ export default function Home() {
         <WeatherForecast days={days} />
         <DaysPicker />
         <CharacterRoster characters={characters} />
-        <div className="my-16 flex justify-between items-center p-8 border">
+        <div className="my-16 flex justify-between items-center p-8 bg-gray-950">
           <div>
             <p className="text-white text-3xl">Ready to go?</p>
           </div>
           <button
             type="button"
-            className="rounded-md bg-white/10 px-3.5 py-2.5 text-4xl font-semibold text-white shadow-sm hover:bg-white/20"
+            className="rounded-md bg-white/10 px-3.5 py-2.5 text-4xl font-semibold text-white shadow-sm hover:bg-gray-700"
           >
             Depart
           </button>
