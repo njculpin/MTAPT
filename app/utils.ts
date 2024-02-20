@@ -1,52 +1,47 @@
 export function numberToString(num: number): string {
-  // Define arrays for numbers and their string representations
   const units: string[] = [
     "",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
   ];
   const teens: string[] = [
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-    "fourteen",
-    "fifteen",
-    "sixteen",
-    "seventeen",
-    "eighteen",
-    "nineteen",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
   ];
   const tens: string[] = [
     "",
     "",
-    "twenty",
-    "thirty",
-    "forty",
-    "fifty",
-    "sixty",
-    "seventy",
-    "eighty",
-    "ninety",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
   ];
-
-  // Define the big numbers (powers of ten)
   const bigNumbers: string[] = [
     "",
-    "thousand",
-    "million",
-    "billion",
-    "trillion",
+    "Thousand",
+    "Million",
+    "Billion",
+    "Trillion",
   ];
-
-  // Function to convert numbers below 1000
   function convertUnderThousand(n: number): string {
     let str = "";
     const hundred = Math.floor(n / 100);
@@ -74,16 +69,11 @@ export function numberToString(num: number): string {
     }
     return str;
   }
-
-  // Handle the special case of zero
   if (num === 0) {
     return "zero";
   }
-
   let result = "";
   let index = 0;
-
-  // Process the number in groups of three digits
   while (num > 0) {
     const chunk = num % 1000;
     if (chunk > 0) {
@@ -92,7 +82,5 @@ export function numberToString(num: number): string {
     num = Math.floor(num / 1000);
     index++;
   }
-
-  // Clean up any extra whitespace and return the result
   return result.trim();
 }

@@ -1,18 +1,7 @@
-interface CharacterAttributes {
+export interface Character {
+  id: number;
   name: string;
-  profession: string;
-  skills: SkillAttributes[];
-  strength: number;
-  health: number;
-  charisma: number;
-  perception: number;
-  intelligence: number;
-  dexterity: number;
+  skills: string;
+  image: string;
   salary: number;
-  food: number;
-}
-
-interface SkillAttributes {
-  name: string;
-  description: string;
 }

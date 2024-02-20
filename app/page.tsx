@@ -1,11 +1,13 @@
 import { characters, equipment } from "./data";
-import { CharacterCard, EquipmentCard, WeatherForecast } from "./components";
-import { numberToString } from "./utils";
-import { DaysPicker } from "./components/days-picker";
+import {
+  CharacterRoster,
+  EquipmentCard,
+  WeatherForecast,
+  DaysPicker,
+} from "./components";
 
 export default function Home() {
-  const days = 5;
-  const day = numberToString(days);
+  const days = 7;
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="max-w-5xl w-full justify-center font-mono">
@@ -16,29 +18,9 @@ export default function Home() {
             <span className="text-purple-600">Cafeteria.</span>
           </p>
         </div>
-        <div className="my-16 space-y-6">
-          <DaysPicker />
-        </div>
-        <div className="my-16 space-y-16">
-          <p className="text-white text-xl pb-2">
-            Here is the latest {day} day weather report
-          </p>
-          <WeatherForecast days={days} />
-        </div>
-        <div className="my-16 space-y-6">
-          <p className="text-white text-xl pb-2">
-            Select your team for the trip
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {characters.map(function (item: CharacterAttributes) {
-              return (
-                <div key={item.name}>
-                  <CharacterCard character={item} />
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <WeatherForecast days={days} />
+        <DaysPicker />
+        <CharacterRoster characters={characters} />
         <div className="my-16 space-y-6">
           <p className="text-white text-xl pb-2">Select Gear and Equipment</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

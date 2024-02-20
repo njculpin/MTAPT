@@ -1,58 +1,18 @@
 export const characters = [
   {
+    id: 0,
     name: "Richie",
-    profession: "Navigator",
-    skills: [
-      {
-        name: "Maps",
-        description: "read a map",
-      },
-      { name: "Compass", description: "read a compass" },
-    ],
-    strength: 5,
-    health: 10,
-    charisma: 5,
-    perception: 5,
-    intelligence: 7,
-    dexterity: 5,
-    salary: 2,
-    food: 2,
+    skills: "Richie is an excellent navigator.",
+    image:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    salary: 5,
   },
   {
-    name: "Andrew",
-    profession: "Chef",
-    skills: [
-      {
-        name: "Cooking",
-        description: "cook a great meal",
-      },
-      { name: "Fire", description: "start a fire" },
-    ],
-    strength: 5,
-    health: 10,
-    charisma: 5,
-    perception: 5,
-    intelligence: 7,
-    dexterity: 5,
-    salary: 2,
-    food: 2,
-  },
-  {
-    name: "Garett",
-    profession: "Trapper",
-    skills: [
-      {
-        name: "Traps",
-        description: "trap animals",
-      },
-    ],
-    strength: 5,
-    health: 10,
-    charisma: 5,
-    perception: 5,
-    intelligence: 7,
-    dexterity: 5,
-    salary: 2,
-    food: 2,
+    id: 1,
+    name: "Richie",
+    skills: "Richie is an excellent navigator.",
+    image:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    salary: 5,
   },
 ];
