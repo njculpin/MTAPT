@@ -13,9 +13,10 @@ export function CharacterCard({ character }: { character: any }) {
       <Switch checked={enabled} onChange={setEnabled} className="w-full">
         <span
           className={classNames(
-            enabled ? "bg-gray-900 border border-gray-800" : "bg-gray-950",
-            "w-full flex flex-grow flex-col justify-center items-center p-4",
-            "w-full flex flex-grow flex-col p-4"
+            enabled
+              ? "bg-gray-900 border-gray-800"
+              : "bg-gray-950 border-gray-950",
+            "w-full flex flex-grow flex-col justify-center items-center p-4 border"
           )}
         >
           <Switch.Label
@@ -31,7 +32,6 @@ export function CharacterCard({ character }: { character: any }) {
           >
             <p>{character.skills}</p>
             <HealthMeter health={character.health} />
-            <p>Hire for ${character.salary} APT per day</p>
           </Switch.Description>
         </span>
       </Switch>

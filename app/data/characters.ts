@@ -2,28 +2,67 @@ export const characters = [
   {
     id: 0,
     name: "Richie",
-    skills: "Richie is an excellent navigator.",
+    skills: "Navigator",
     health: 4,
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    salary: 5,
   },
   {
     id: 1,
-    name: "Richie",
-    skills: "Richie is an excellent navigator.",
-    health: 2,
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    salary: 5,
+    name: "Lee",
+    skills: "Cartographer",
+    health: 4,
   },
   {
     id: 2,
-    name: "Richie",
-    skills: "Richie is an excellent navigator.",
+    name: "Trevor",
+    skills: "Transportation Expert",
+    health: 4,
+  },
+  {
+    id: 3,
+    name: "John",
+    skills: "Scout",
+    health: 4,
+  },
+  {
+    id: 4,
+    name: "Bram",
+    skills: "Scientist",
+    health: 4,
+  },
+  {
+    id: 5,
+    name: "David",
+    skills: "Hunter",
+    health: 4,
+  },
+  {
+    id: 6,
+    name: "Lauren",
+    skills: "Recruiter",
+    health: 4,
+  },
+  {
+    id: 7,
+    name: "Justine",
+    skills: "Technologist",
+    health: 4,
+  },
+  {
+    id: 8,
+    name: "Marawan",
+    skills: "Excavator",
     health: 3,
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    salary: 5,
+  },
+  {
+    id: 9,
+    name: "Jace",
+    skills: "Archaeologist",
+    health: 4,
+  },
+  {
+    id: 10,
+    name: "Daniel",
+    skills: "Engineer",
+    health: 4,
   },
 ];

@@ -3,6 +3,4 @@ export interface Character {
   name: string;
   skills: string;
   health: number;
-  image: string;
-  salary: number;
 }
