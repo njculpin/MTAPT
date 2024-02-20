@@ -25,7 +25,7 @@ export const weather = [
   },
   {
     id: 5,
-    name: "Scattered Thunder Showers",
+    name: "Thunder Showers",
     hex: "#1E90FF",
     adj: [1, 3, 4],
   },

@@ -20,13 +20,18 @@ export function DaysPicker() {
   const [days, setDays] = useState(options[2]);
 
   return (
-    <div className="my-16 space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-white text-xl pb-2">Days</p>
+    <div className="my-16 space-y-16">
+      <div className="flex flex-col">
+        <p className="text-white text-xl pb-2">Number of days for this trip</p>
+        <p className="text-xs italic">
+          Choose a number of days you think you can survive and be effective.
+          You should balance your equipment, party members, your route, and
+          known weather conditions.
+        </p>
       </div>
       <RadioGroup value={days} onChange={setDays} className="mt-2">
         <RadioGroup.Label className="sr-only">
-          Choose a memory option
+          Choose the number of days for your trip
         </RadioGroup.Label>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-7">
           {options.map((option) => (
@@ -35,7 +40,9 @@ export function DaysPicker() {
               value={option}
               className={({ active, checked }) =>
                 classNames(
-                  checked ? "bg-gray-900" : "bg-black",
+                  checked
+                    ? "bg-gray-900 border border-gray-800"
+                    : "bg-gray-950",
                   "w-full flex flex-grow flex-col justify-center items-center p-4"
                 )
               }

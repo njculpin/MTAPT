@@ -72,7 +72,7 @@ function WeatherIcon({ weather }: { weather: Weather }) {
           </g>
         </svg>
       );
-    case "Scattered Thunder Showers":
+    case "Thunder Showers":
       return (
         <svg
           width="76px"
