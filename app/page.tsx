@@ -1,11 +1,10 @@
-import { getWeather } from "./models";
-import { weather, characters, equipment } from "./data";
-import { WeatherCard, CharacterCard, EquipmentCard } from "./components";
+import { characters, equipment } from "./data";
+import { CharacterCard, EquipmentCard, WeatherForecast } from "./components";
 import { numberToString } from "./utils";
+import { DaysPicker } from "./components/days-picker";
 
 export default function Home() {
   const days = 5;
-  const weathers = getWeather({ weather, days });
   const day = numberToString(days);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -18,42 +17,13 @@ export default function Home() {
           </p>
         </div>
         <div className="my-16 space-y-6">
-          <div className="space-y-4">
-            <p className="text-white text-xl">
-              How many days will you attempt?
-            </p>
-            <p className="text-white text-md italic">
-              1 day is equal to 1 block.
-            </p>
-          </div>
-
-          <div>
-            <div className="mt-2">
-              <input
-                type="number"
-                name="days"
-                id="days"
-                style={{ fontSize: "32px" }}
-                className="block w-full rounded-md border-0 py-1.5 bg-black text-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 p-4"
-                defaultValue={"0"}
-                min={1}
-              />
-            </div>
-          </div>
+          <DaysPicker />
         </div>
         <div className="my-16 space-y-16">
           <p className="text-white text-xl pb-2">
             Here is the latest {day} day weather report
           </p>
-          <div className="grid grid-cols-5 gap-2">
-            {weathers.map(function (weather, wIdx: number) {
-              return (
-                <div key={wIdx}>
-                  <WeatherCard weather={weather} />
-                </div>
-              );
-            })}
-          </div>
+          <WeatherForecast days={days} />
         </div>
         <div className="my-16 space-y-6">
           <p className="text-white text-xl pb-2">
