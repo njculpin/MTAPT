@@ -15,10 +15,14 @@ export function CharacterRoster({ characters }: { characters: Character[] }) {
           case, we might have bigger fish to fry.
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {characters.map((character: Character) => (
-          <div key={character.id}>
+          <div
+            key={character.id}
+            className="grid grid-cols-4 gap-4 border border-gray-900 p-4"
+          >
             <CharacterCard character={character} />
+            <div className="col-span-3">backpack</div>
           </div>
         ))}
       </div>
