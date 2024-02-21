@@ -1,7 +1,13 @@
-import { Character } from "../models";
-import { CharacterCard } from "./character-card";
+import { Character, Equipment } from "../models";
+import { CharacterCard, BackpackCard } from ".";
 
-export function CharacterRoster({ characters }: { characters: Character[] }) {
+export function CharacterRoster({
+  characters,
+  equipment,
+}: {
+  characters: Character[];
+  equipment: Equipment[];
+}) {
   return (
     <div className="my-16 space-y-16">
       <div className="flex flex-col">
@@ -21,8 +27,12 @@ export function CharacterRoster({ characters }: { characters: Character[] }) {
             key={character.id}
             className="grid grid-cols-4 gap-4 border border-gray-900 p-4"
           >
-            <CharacterCard character={character} />
-            <div className="col-span-3">backpack</div>
+            <div className="col-span-1">
+              <CharacterCard character={character} />
+            </div>
+            <div className="col-span-3">
+              <BackpackCard character={character} equipment={equipment} />
+            </div>
           </div>
         ))}
       </div>

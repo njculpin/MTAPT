@@ -1,4 +1,4 @@
-interface LandAttributes {
+interface Land {
   location: LocationAttributes;
 }
 

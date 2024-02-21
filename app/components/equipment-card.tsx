@@ -1,38 +1,40 @@
 "use client";
+import { useState } from "react";
+import { Equipment } from "../models";
+import { Switch } from "@headlessui/react";
 
-export function EquipmentCard({ equipment }: { equipment: any }) {
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+export function EquipmentCard({ equipment }: { equipment: Equipment }) {
+  const [enabled, setEnabled] = useState(false);
   return (
-    <div className="p-4 border border-gray-50" key={equipment.name}>
-      <div className="flex flex-row justify-between items-center gap-4">
-        <div>
-          <label htmlFor="quantity" className="sr-only">
-            Quantity
-          </label>
-          <select
-            id="quantity"
-            name="quantity"
-            className="bg-black rounded-md border border-gray-300 text-left text-2xl font-bold text-white shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500 sm:text-sm p-2"
+    <Switch.Group as="div" className="flex justify-center items-center">
+      <Switch checked={enabled} onChange={setEnabled} className="w-full">
+        <span
+          className={classNames(
+            enabled
+              ? "bg-gray-900 border-gray-800"
+              : "bg-gray-950 border-gray-950",
+            "w-full flex flex-grow flex-col justify-center items-center p-4 border hover:bg-gray-700"
+          )}
+        >
+          <Switch.Label
+            as="span"
+            className="text-sm leading-6 text-white font-bold"
+            passive
           >
-            <option value={0}>0</option>
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-            <option value={4}>4</option>
-            <option value={5}>5</option>
-            <option value={6}>6</option>
-            <option value={7}>7</option>
-            <option value={8}>8</option>
-          </select>
-        </div>
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-bold leading-6 text-white"
+            {equipment.name}
+          </Switch.Label>
+          <Switch.Description
+            as="span"
+            className="text-sm text-gray-50 flex flex-col justify-center items-center space-y-4"
           >
-            {equipment.name} - {equipment.cost} APT
-          </label>
-        </div>
-      </div>
-    </div>
+            <p>{equipment.cost}</p>
+          </Switch.Description>
+        </span>
+      </Switch>
+    </Switch.Group>
   );
 }

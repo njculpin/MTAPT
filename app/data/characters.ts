@@ -71,4 +71,10 @@ export const characters = [
     skills: "Engineer",
     health: 4,
   },
+  {
+    id: 11,
+    name: "Andrew",
+    skills: "Engineer",
+    health: 4,
+  },
 ];

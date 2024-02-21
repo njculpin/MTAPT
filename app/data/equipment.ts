@@ -1,4 +1,6 @@
-export const equipment = [
+import { Equipment } from "../models";
+
+export const equipment: Equipment[] = [
   {
     name: "First Aid Kit",
     description:

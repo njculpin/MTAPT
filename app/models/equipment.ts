@@ -1,6 +1,6 @@
-interface EquipAttributes {
+export interface Equipment {
   name: string;
   description: string;
-  uses: string;
+  uses: number;
   cost: number;
 }
