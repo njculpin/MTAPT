@@ -45,6 +45,6 @@ export const weather = [
     id: 8,
     name: "Tropical Storm",
     hex: "#b91c1c",
-    adj: [4],
+    adj: [4, 7],
   },
 ];
