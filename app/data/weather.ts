@@ -33,7 +33,7 @@ export const weather = [
     id: 6,
     name: "Fog",
     hex: "#D3D3D3",
-    adj: [2, 3],
+    adj: [1, 2, 3],
   },
   {
     id: 7,
@@ -44,7 +44,7 @@ export const weather = [
   {
     id: 8,
     name: "Tropical Storm",
-    hex: "#87CEEB",
+    hex: "#b91c1c",
     adj: [4],
   },
 ];
