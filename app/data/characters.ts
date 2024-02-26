@@ -66,14 +66,8 @@ export const characters = [
     health: 4,
   },
   {
-    id: 10,
-    name: "Nick",
-    skills: "Engineer",
-    health: 4,
-  },
-  {
     id: 11,
-    name: "Andrew",
+    name: "Nick",
     skills: "Engineer",
     health: 4,
   },

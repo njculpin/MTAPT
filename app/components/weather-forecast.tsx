@@ -1,20 +1,13 @@
 import { weather } from "../data";
 import { WeatherCard } from ".";
 import { getWeather } from "../models/weather";
-import { numberToString } from "../utils";
 
 export async function WeatherForecast({ days }: { days: number }) {
   const forecast = getWeather({ weather, days });
-  const day = numberToString(days);
   return (
-    <div className="my-16 space-y-16">
+    <div className="my-16 space-y-4">
       <div className="flex flex-col">
-        <p className="text-white text-xl pb-2">{day} day weather report</p>
-        <p className="text-xs italic">
-          A day is removed from the beginning and added to the end of the
-          forecase with each passing block. 1 day is equal to 1 block on the
-          Aptos Blockchain or approximately 2 hours.
-        </p>
+        <p className="text-black text-xl pb-2">Weather</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-3">
         {forecast.map(function (weather, wIdx: number) {
