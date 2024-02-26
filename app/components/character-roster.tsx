@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { Character, Equipment } from "../models";
 import { CharacterCard, BackpackCard } from ".";
 
@@ -13,9 +15,9 @@ export function CharacterRoster({
       <div className="flex flex-col">
         <p className="text-black text-xl pb-2">Crew</p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {characters.map((character: Character) => (
-          <div key={character.id} className="p-4">
+          <div key={character.id}>
             <CharacterCard character={character} />
           </div>
         ))}

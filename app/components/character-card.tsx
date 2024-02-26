@@ -1,19 +1,24 @@
 "use client";
 import { useState } from "react";
+import { Character } from "../models";
 
-export function CharacterCard({ character }: { character: any }) {
+export function CharacterCard({ character }: { character: Character | null }) {
+  if (!character) {
+    return <></>;
+  }
   return (
-    <div className="w-full flex justify-center items-center">
-      <div className="w-full">
-        <span
-          className={
-            "bg-white w-full flex flex-grow flex-col justify-center items-center p-4"
-          }
-        >
-          <div className="mb-6">
-            <CharacterIcon />
-          </div>
-        </span>
+    <div className="w-full flex flex-row justify-start p-6 border">
+      <div className="mr-6">
+        <div className="p-2 h-32 w-32 flex justify-center items-center border">
+          <CharacterIcon />
+        </div>
+      </div>
+      <div className="p-2 space-y-2 flex flex-col justify-between">
+        <div>
+          <p className="text-black font-bold">{character.name}</p>
+          <p className="text-black text-xs">{character.skills}</p>
+        </div>
+        <HealthMeter health={character.health} />
       </div>
     </div>
   );
@@ -22,7 +27,7 @@ export function CharacterCard({ character }: { character: any }) {
 function HealthMeter({ health }: { health: number }) {
   const counter = Array.from({ length: 4 }, (_, index) => index + 1);
   return (
-    <div className="flex flex-row justify-center items-center space-x-4">
+    <div className="flex flex-row justify-start items-center space-x-4">
       {counter.map(function (heart) {
         if (health >= heart) {
           return <FullHealthIcon key={heart} />;

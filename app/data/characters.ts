@@ -2,13 +2,14 @@ export const characters = [
   {
     id: 0,
     name: "Richie",
-    skills: "Navigator",
+    skills:
+      "Navigator - Reading maps, a compass, an iphone, plan your the worst",
     health: 4,
   },
   {
     id: 1,
     name: "Lee",
-    skills: "Cartographer",
+    skills: "Cartographer - Has skills in record keeping, and map mapping",
     health: 4,
   },
   {
@@ -39,7 +40,7 @@ export const characters = [
     id: 6,
     name: "Lauren",
     skills: "Linguist",
-    health: 1,
+    health: 4,
   },
   {
     id: 7,
@@ -51,13 +52,13 @@ export const characters = [
     id: 8,
     name: "Marawan",
     skills: "Excavator",
-    health: 3,
+    health: 4,
   },
   {
     id: 9,
     name: "Jace",
     skills: "Archaeologist",
-    health: 2,
+    health: 4,
   },
   {
     id: 10,
