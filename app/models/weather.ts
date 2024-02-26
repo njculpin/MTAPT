@@ -1,6 +1,9 @@
 export interface Weather {
   id: number;
   name: string;
+  low: number;
+  high: number;
+  rain: number;
   hex: string;
   adj: number[];
 }

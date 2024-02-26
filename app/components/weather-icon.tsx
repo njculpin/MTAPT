@@ -1,37 +1,41 @@
 import { Weather } from "../models";
-export function WeatherCard({ weather }: { weather: Weather }) {
-  return (
-    <div className="flex flex-col justify-center items-center p-2 space-y-4">
-      <WeatherIcon weather={weather} />
-      <p className="text-xs text-center">{weather.name}</p>
-    </div>
-  );
-}
 
-function WeatherIcon({ weather }: { weather: Weather }) {
+export function WeatherIcon({
+  weather,
+  size,
+}: {
+  weather: Weather;
+  size: number;
+}) {
   switch (weather.name) {
     case "Sunny":
-      return <SunnyIcon hex={weather.hex} />;
+      return <SunnyIcon hex={weather.hex} size={size} />;
     case "Partly Cloudy":
-      return <PartlyCloudyIcon hex={weather.hex} />;
+      return <PartlyCloudyIcon hex={weather.hex} size={size} />;
     case "Scattered Showers":
-      return <ScatteredShowersIcon hex={weather.hex} />;
+      return <ScatteredShowersIcon hex={weather.hex} size={size} />;
     case "Heavy Rain":
-      return <HeavyRainIcon hex={weather.hex} />;
+      return <HeavyRainIcon hex={weather.hex} size={size} />;
     case "Thunder Showers":
-      return <ThunderShowersIcon hex={weather.hex} />;
+      return <ThunderShowersIcon hex={weather.hex} size={size} />;
     case "Fog":
-      return <FogIcon hex={weather.hex} />;
+      return <FogIcon hex={weather.hex} size={size} />;
     case "Windy":
-      return <WindyIcon hex={weather.hex} />;
+      return <WindyIcon hex={weather.hex} size={size} />;
     case "Tropical Storm":
-      return <TropicalStormIcon hex={weather.hex} />;
+      return <TropicalStormIcon hex={weather.hex} size={size} />;
     default:
-      return <SunnyIcon hex={weather.hex} />;
+      return <SunnyIcon hex={weather.hex} size={size} />;
   }
 }
 
-function TropicalStormIcon({ hex }: { hex: string }) {
+export function TropicalStormIcon({
+  hex,
+  size,
+}: {
+  hex: string;
+  size: number;
+}) {
   return (
     <svg
       width="50px"
@@ -39,6 +43,7 @@ function TropicalStormIcon({ hex }: { hex: string }) {
       viewBox="0 0 50 80"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"
@@ -58,7 +63,7 @@ function TropicalStormIcon({ hex }: { hex: string }) {
   );
 }
 
-function WindyIcon({ hex }: { hex: string }) {
+export function WindyIcon({ hex, size }: { hex: string; size: number }) {
   return (
     <svg
       width="80px"
@@ -66,6 +71,7 @@ function WindyIcon({ hex }: { hex: string }) {
       viewBox="0 0 80 70"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"
@@ -85,7 +91,7 @@ function WindyIcon({ hex }: { hex: string }) {
   );
 }
 
-function FogIcon({ hex }: { hex: string }) {
+export function FogIcon({ hex, size }: { hex: string; size: number }) {
   return (
     <svg
       width="80px"
@@ -93,6 +99,7 @@ function FogIcon({ hex }: { hex: string }) {
       viewBox="0 0 80 78"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"
@@ -116,7 +123,13 @@ function FogIcon({ hex }: { hex: string }) {
   );
 }
 
-function ThunderShowersIcon({ hex }: { hex: string }) {
+export function ThunderShowersIcon({
+  hex,
+  size,
+}: {
+  hex: string;
+  size: number;
+}) {
   return (
     <svg
       width="76px"
@@ -124,6 +137,7 @@ function ThunderShowersIcon({ hex }: { hex: string }) {
       viewBox="0 0 76 80"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"
@@ -143,7 +157,7 @@ function ThunderShowersIcon({ hex }: { hex: string }) {
   );
 }
 
-function HeavyRainIcon({ hex }: { hex: string }) {
+export function HeavyRainIcon({ hex, size }: { hex: string; size: number }) {
   return (
     <svg
       width="80px"
@@ -151,6 +165,7 @@ function HeavyRainIcon({ hex }: { hex: string }) {
       viewBox="0 0 80 80"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"
@@ -174,7 +189,13 @@ function HeavyRainIcon({ hex }: { hex: string }) {
   );
 }
 
-function ScatteredShowersIcon({ hex }: { hex: string }) {
+export function ScatteredShowersIcon({
+  hex,
+  size,
+}: {
+  hex: string;
+  size: number;
+}) {
   return (
     <svg
       width="80px"
@@ -182,6 +203,7 @@ function ScatteredShowersIcon({ hex }: { hex: string }) {
       viewBox="0 0 80 78"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"
@@ -205,7 +227,7 @@ function ScatteredShowersIcon({ hex }: { hex: string }) {
   );
 }
 
-function SunnyIcon({ hex }: { hex: string }) {
+export function SunnyIcon({ hex, size }: { hex: string; size: number }) {
   return (
     <svg
       width="80px"
@@ -213,6 +235,7 @@ function SunnyIcon({ hex }: { hex: string }) {
       viewBox="0 0 80 80"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"
@@ -232,7 +255,7 @@ function SunnyIcon({ hex }: { hex: string }) {
   );
 }
 
-function PartlyCloudyIcon({ hex }: { hex: string }) {
+export function PartlyCloudyIcon({ hex, size }: { hex: string; size: number }) {
   return (
     <svg
       width="80px"
@@ -240,6 +263,7 @@ function PartlyCloudyIcon({ hex }: { hex: string }) {
       viewBox="0 0 80 56"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ height: size, width: size }}
     >
       <g
         id="Page-1"

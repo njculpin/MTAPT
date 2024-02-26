@@ -9,7 +9,7 @@ export const characters = [
   {
     id: 1,
     name: "Lee",
-    skills: "Cartographer - Has skills in record keeping, and map mapping",
+    skills: "Naturalist and Biologist - Recording keeping, draftsman",
     health: 4,
   },
   {
