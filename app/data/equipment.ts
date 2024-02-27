@@ -4,7 +4,7 @@ export const equipment: Equipment[] = [
   {
     id: 0,
     name: "First Aid Kit",
-    category: "",
+    category: "equipment",
     description:
       "Has bandages, stitches, antibiotic ointment, scissors, needles",
     size: 10,
@@ -14,7 +14,7 @@ export const equipment: Equipment[] = [
   {
     id: 1,
     name: "Mess Kit",
-    category: "",
+    category: "equipment",
     description: "Has a bowl, cup, and a camp fork and a basic",
     size: 10,
     uses: 1000,
@@ -23,7 +23,7 @@ export const equipment: Equipment[] = [
   {
     id: 2,
     name: "Fuel Canister",
-    category: "",
+    category: "equipment",
     description: "Has fuel to run a small burner",
     size: 10,
     uses: 20,
@@ -32,7 +32,7 @@ export const equipment: Equipment[] = [
   {
     id: 3,
     name: "Compact Burner",
-    category: "",
+    category: "equipment",
     description: "Uses the Fuel Canister",
     size: 5,
     uses: 500,
@@ -41,10 +41,19 @@ export const equipment: Equipment[] = [
   {
     id: 4,
     name: "Lighter",
-    category: "",
+    category: "equipment",
     description: "Can start a small fire",
     size: 1,
     uses: 200,
     cost: 2,
+  },
+  {
+    id: 5,
+    name: "Tent",
+    category: "equipment",
+    description: "Capacity for one person",
+    size: 30,
+    uses: 200,
+    cost: 20,
   },
 ];

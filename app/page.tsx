@@ -1,9 +1,9 @@
 import { characters, equipment } from "./data";
 import {
   CharacterRoster,
-  BackpackCard,
   WeatherForecast,
   DaysPicker,
+  Shop,
 } from "./components";
 
 export default function Home() {
@@ -19,8 +19,9 @@ export default function Home() {
           </p>
         </div>
         <WeatherForecast days={days} />
-        <CharacterRoster characters={characters} equipment={equipment} />
+        <CharacterRoster characters={characters} />
         <DaysPicker />
+        <Shop equipment={equipment} />
       </div>
     </main>
   );

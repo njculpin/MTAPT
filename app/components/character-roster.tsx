@@ -1,15 +1,8 @@
 "use client";
-import { useState } from "react";
-import { Character, Equipment } from "../models";
-import { CharacterCard, BackpackCard } from ".";
+import { Character } from "../models";
+import { CharacterCard } from ".";
 
-export function CharacterRoster({
-  characters,
-  equipment,
-}: {
-  characters: Character[];
-  equipment: Equipment[];
-}) {
+export function CharacterRoster({ characters }: { characters: Character[] }) {
   return (
     <div className="space-7-4">
       <div className="flex flex-col">
