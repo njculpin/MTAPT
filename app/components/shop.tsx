@@ -27,7 +27,7 @@ export function Shop({ equipment }: { equipment: Equipment[] }) {
                     <p>{equip.uses} uses</p>
                   </div>
                 </div>
-                <div className="mt-6">
+                <div className="mt-6 space-y-4">
                   <div>
                     <p className="text-xl">${equip.cost}</p>
                   </div>
