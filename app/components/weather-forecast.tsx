@@ -42,7 +42,9 @@ export async function WeatherForecast({ days }: { days: number }) {
                     <td className="whitespace-nowrap py-4 pl-4 pr-4 text-sm text-gray-500 sm:pr-0">
                       <span className="flex flex-row items-center space-x-2">
                         <WindyIcon hex={"#778899"} size={24} />
-                        <span>NW 12 mph</span>
+                        <span>
+                          {cast.direction} {cast.wind} mph
+                        </span>
                       </span>
                     </td>
                   </tr>
