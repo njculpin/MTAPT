@@ -10,9 +10,7 @@ export function CharacterRoster({ characters }: { characters: Character[] }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {characters.map((character: Character) => (
-          <div key={character.id}>
-            <CharacterCard character={character} />
-          </div>
+          <CharacterCard character={character} key={character.id} />
         ))}
       </div>
     </div>

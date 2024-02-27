@@ -1,25 +1,41 @@
 "use client";
+import { useState } from "react";
+import { Switch } from "@headlessui/react";
 import { Character } from "../models";
 
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
 export function CharacterCard({ character }: { character: Character | null }) {
+  const [enabled, setEnabled] = useState(false);
   if (!character) {
     return <></>;
   }
   return (
-    <div className="w-full flex flex-row justify-start p-6">
-      <div className="mr-6">
-        <div className="p-2 h-32 w-32 flex justify-center items-center">
-          <CharacterIcon />
-        </div>
-      </div>
-      <div className="p-2 space-y-2 flex flex-col justify-between">
+    <Switch checked={enabled} onChange={setEnabled}>
+      <div
+        className={classNames(
+          enabled
+            ? "bg-gray-100 border border-gray-50 shadow-sm"
+            : "bg-white shadow-lg",
+          "w-full flex flex-row p-6 hover:bg-gray-200 cursor-pointer text-gray-900 "
+        )}
+      >
         <div>
-          <p className="text-black font-bold">{character.name}</p>
-          <p className="text-black text-xs">{character.skills}</p>
+          <div className="p-2 h-32 w-32 flex justify-center items-center">
+            <CharacterIcon />
+          </div>
         </div>
-        <HealthMeter health={character.health} />
+        <div className="p-2 space-y-2 flex flex-col justify-between text-left">
+          <div>
+            <p className="text-black font-bold">{character.name}</p>
+            <p className="text-black text-xs">{character.skills}</p>
+          </div>
+          <HealthMeter health={character.health} />
+        </div>
       </div>
-    </div>
+    </Switch>
   );
 }
 

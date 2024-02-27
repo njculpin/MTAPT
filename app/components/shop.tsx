@@ -22,15 +22,15 @@ export function Shop({ equipment }: { equipment: Equipment[] }) {
                   <div>
                     <p className="italic text-gray-700">{equip.description}</p>
                   </div>
-                  <div className="text-gray-700">
+                  <div className="text-gray-700 grid grid-cols-2 gap-4">
                     <p>{equip.size} size</p>
                     <p>{equip.uses} uses</p>
                   </div>
+                </div>
+                <div className="mt-6">
                   <div>
                     <p className="text-xl">${equip.cost}</p>
                   </div>
-                </div>
-                <div className="mt-6">
                   <button className="relative flex items-center justify-center rounded-md border border-transparent bg-gray-100 px-8 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200">
                     Add to bag<span className="sr-only">, {equip.name}</span>
                   </button>

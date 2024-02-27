@@ -35,7 +35,7 @@ export function DaysPicker() {
                 classNames(
                   checked
                     ? "bg-gray-100 border border-gray-50 shadow-sm"
-                    : "bg-gray-100 shadow-lg",
+                    : "bg-white shadow-lg",
                   "text-gray-900 w-full flex flex-grow flex-col justify-center items-center p-4 hover:bg-gray-200 cursor-pointer"
                 )
               }
