@@ -12,6 +12,15 @@ export const equipment: Equipment[] = [
   },
   {
     id: 1,
+    name: "Hiking Boot",
+    category: "Hiking",
+    description: "",
+    size: 10,
+    uses: 800,
+    cost: 200,
+  },
+  {
+    id: 2,
     name: "Air Pad",
     category: "Pads & Hammocks",
     description: "Has a bowl, cup, and a camp fork and a basic",
@@ -20,7 +29,7 @@ export const equipment: Equipment[] = [
     cost: 2,
   },
   {
-    id: 2,
+    id: 3,
     name: "Head Lamp",
     category: "Lighting",
     description: "Has fuel to run a small burner",
@@ -29,7 +38,7 @@ export const equipment: Equipment[] = [
     cost: 2,
   },
   {
-    id: 3,
+    id: 4,
     name: "Medium Super",
     category: "Backpacks",
     description: "Uses the Fuel Canister",
@@ -38,7 +47,7 @@ export const equipment: Equipment[] = [
     cost: 2,
   },
   {
-    id: 4,
+    id: 5,
     name: "Messkit",
     category: "Camp Kitchen",
     description: "Can start a small fire",
@@ -47,7 +56,7 @@ export const equipment: Equipment[] = [
     cost: 2,
   },
   {
-    id: 5,
+    id: 6,
     name: "Compass",
     category: "Electronics",
     description: "Capacity for one person",
@@ -56,7 +65,7 @@ export const equipment: Equipment[] = [
     cost: 20,
   },
   {
-    id: 6,
+    id: 7,
     name: "Standard Tent",
     category: "Tents",
     description: "Capacity for one person",
@@ -65,7 +74,7 @@ export const equipment: Equipment[] = [
     cost: 20,
   },
   {
-    id: 7,
+    id: 8,
     name: "Camp Chair",
     category: "Camp Furniture",
     description: "Capacity for one person",
@@ -74,7 +83,7 @@ export const equipment: Equipment[] = [
     cost: 20,
   },
   {
-    id: 8,
+    id: 9,
     name: "First Aid Kit",
     category: "Health & Safety",
     description: "Capacity for one person",
@@ -83,7 +92,7 @@ export const equipment: Equipment[] = [
     cost: 20,
   },
   {
-    id: 9,
+    id: 10,
     name: "Sub 30",
     category: "Sleeping Bags",
     description: "Capacity for one person",
@@ -92,7 +101,7 @@ export const equipment: Equipment[] = [
     cost: 20,
   },
   {
-    id: 10,
+    id: 11,
     name: "Water bottle",
     category: "Hydration",
     description: "Capacity for one person",
@@ -101,10 +110,19 @@ export const equipment: Equipment[] = [
     cost: 20,
   },
   {
-    id: 11,
+    id: 12,
     name: "Camp Knife",
     category: "Gadgets & Gear",
-    description: "Capacity for one person",
+    description: "4.5 inch standard camp knife with shealth",
+    size: 30,
+    uses: 200,
+    cost: 20,
+  },
+  {
+    id: 13,
+    name: "Hatchet",
+    category: "Gadgets & Gear",
+    description: "15 inch Bushcraft",
     size: 30,
     uses: 200,
     cost: 20,

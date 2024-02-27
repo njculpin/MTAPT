@@ -17,14 +17,12 @@ export function Shop({ equipment }: { equipment: Equipment[] }) {
                 <div className="space-y-2">
                   <div>
                     <p className="font-bold text-2xl">{equip.name}</p>
-                    <p>{equip.category}</p>
+                    <p className="text-gray-700 text-sm">{equip.category}</p>
                   </div>
                   <div>
-                    <p className="italic text-gray-700">{equip.description}</p>
-                  </div>
-                  <div className="text-gray-700 grid grid-cols-2 gap-4">
-                    <p>{equip.size} size</p>
-                    <p>{equip.uses} uses</p>
+                    <p className="italic text-gray-700 text-xs">
+                      {equip.description}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-6 flex justify-between items-center">
