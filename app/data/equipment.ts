@@ -8,7 +8,7 @@ export const equipment: Equipment[] = [
     description: "",
     size: 10,
     uses: 800,
-    cost: 200,
+    cost: 100,
   },
   {
     id: 1,
@@ -23,10 +23,10 @@ export const equipment: Equipment[] = [
     id: 2,
     name: "Air Pad",
     category: "Pads & Hammocks",
-    description: "Has a bowl, cup, and a camp fork and a basic",
+    description: "",
     size: 10,
     uses: 1000,
-    cost: 2,
+    cost: 60,
   },
   {
     id: 3,

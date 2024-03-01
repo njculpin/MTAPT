@@ -1,10 +1,5 @@
 import { characters, equipment } from "./data";
-import {
-  CharacterRoster,
-  WeatherForecast,
-  DaysPicker,
-  Shop,
-} from "./components";
+import { CharacterRoster, WeatherForecast, Shop } from "./components";
 
 export default function Home() {
   const days = 7;
@@ -20,8 +15,6 @@ export default function Home() {
         </div>
         <WeatherForecast days={days} />
         <CharacterRoster characters={characters} />
-        <DaysPicker />
-        <Shop equipment={equipment} />
       </div>
     </main>
   );

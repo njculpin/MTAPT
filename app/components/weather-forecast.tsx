@@ -1,6 +1,6 @@
 import { weather } from "../data";
 import { getWeather } from "../models/weather";
-import { WeatherIcon, WindyIcon, HeavyRainIcon } from "./weather-icon";
+import { WeatherCard } from "./weather-card";
 
 export async function WeatherForecast({ days }: { days: number }) {
   const forecast = getWeather({ weather, days });
@@ -15,39 +15,43 @@ export async function WeatherForecast({ days }: { days: number }) {
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <table className="min-w-full divide-y divide-gray-300">
+              <thead>
+                <tr className="divide-x divide-gray-200">
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-4 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                  >
+                    Date
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3.5 text-left text-sm font-semibold text-gray-900"
+                  >
+                    Condition
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3.5 text-left text-sm font-semibold text-gray-900"
+                  >
+                    Temperature
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3.5 text-left text-sm font-semibold text-gray-900"
+                  >
+                    Percipitation
+                  </th>
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-4 text-left text-sm font-semibold text-gray-900 sm:pr-0"
+                  >
+                    Wind
+                  </th>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {forecast.map((cast, idx) => (
-                  <tr key={cast.id} className="divide-x divide-gray-200">
-                    <td className="whitespace-nowrap py-4 pl-4 pr-4 text-sm font-medium text-gray-900 sm:pl-0">
-                      {dates[idx]}
-                    </td>
-                    <td className="whitespace-nowrap p-4 text-sm text-gray-500 flex flex-row items-center space-x-4">
-                      <WeatherIcon weather={cast} size={32} />
-                      <span>{cast.name}</span>
-                    </td>
-                    <td className="whitespace-nowrap p-4 text-sm text-gray-500">
-                      <span className="flex flex-row items-center">
-                        <span className="font-bold text-lg">
-                          {cast.high}&deg;
-                        </span>
-                        <span>/{cast.low}&deg;</span>
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap p-4 text-sm text-gray-500">
-                      <span className="flex flex-row items-center space-x-2">
-                        <HeavyRainIcon hex={"#4169E1"} size={24} />
-                        <span>{cast.rain}%</span>
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap py-4 pl-4 pr-4 text-sm text-gray-500 sm:pr-0">
-                      <span className="flex flex-row items-center space-x-2">
-                        <WindyIcon hex={"#778899"} size={24} />
-                        <span>
-                          {cast.direction} {cast.wind} mph
-                        </span>
-                      </span>
-                    </td>
-                  </tr>
+                {forecast.map((weather, idx) => (
+                  <WeatherCard key={idx} weather={weather} date={dates[idx]} />
                 ))}
               </tbody>
             </table>

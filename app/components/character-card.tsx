@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
 import { Switch } from "@headlessui/react";
+import { useState } from "react";
 import { Character } from "../models";
 
 function classNames(...classes: string[]) {
@@ -8,33 +8,117 @@ function classNames(...classes: string[]) {
 }
 
 export function CharacterCard({ character }: { character: Character | null }) {
-  const [enabled, setEnabled] = useState(false);
   if (!character) {
     return <></>;
   }
   return (
-    <Switch checked={enabled} onChange={setEnabled}>
-      <div
-        className={classNames(
-          enabled
-            ? "bg-gray-100 border border-gray-50 shadow-sm"
-            : "bg-white shadow-lg",
-          "w-full flex flex-row p-6 hover:bg-gray-200 cursor-pointer text-gray-900 "
-        )}
-      >
-        <div>
-          <div className="p-2 h-32 w-32 flex justify-center items-center">
+    <tr key={character.id} className="divide-x divide-gray-200">
+      <td className="whitespace-nowrap py-4 pl-4 pr-4 text-sm font-medium text-gray-900 sm:pl-0">
+        <div className="flex items-center">
+          <div className="w-16 h-16">
             <CharacterIcon />
           </div>
+          <p>{character.name}</p>
         </div>
-        <div className="p-2 space-y-2 flex flex-col justify-between text-left">
-          <div>
-            <p className="text-black font-bold">{character.name}</p>
-            <p className="text-black text-xs">{character.skills}</p>
+      </td>
+      <td className="whitespace-nowrap p-4 text-sm text-gray-500">
+        {character.profession}
+      </td>
+      <td className="whitespace-nowrap p-4 text-sm text-gray-500">
+        <HealthMeter health={character.health} />
+      </td>
+      <td className="whitespace-nowrap p-4 text-sm text-gray-500">
+        <div className="flex items-center">
+          <div className="w-16 h-16">
+            <PackIcon />
           </div>
-          <HealthMeter health={character.health} />
         </div>
-      </div>
+      </td>
+      <td className="whitespace-nowrap p-4 text-sm text-gray-500">
+        {character.status}
+      </td>
+      <td className="whitespace-nowrap p-4 text-sm text-gray-500">
+        ${character.salary}
+      </td>
+      <td className="whitespace-nowrap py-4 pl-4 pr-4 text-sm text-gray-500 sm:pr-0">
+        <HireRest />
+      </td>
+    </tr>
+  );
+}
+
+function PackIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 125"
+      x="0px"
+      y="0px"
+    >
+      <path d="M64.22,17.88H35.78a1,1,0,1,1,0-2H64.22a1,1,0,1,1,0,2Z" />
+      <path d="M50,36.72a1,1,0,0,1-.71-.3l-3.67-3.67a1,1,0,0,1,0-1.41l3.67-3.68a1,1,0,0,1,1.42,0l3.67,3.68a1,1,0,0,1,0,1.41l-3.67,3.67A1,1,0,0,1,50,36.72ZM47.74,32,50,34.3,52.26,32,50,29.79Z" />
+      <path d="M76,72.89H70.12a3.73,3.73,0,0,0,.4-1.45l1.29-32.53a8.37,8.37,0,0,0,3.82-7V24.82a1,1,0,0,0-1-1H73.11a3.5,3.5,0,0,0,.33-1.45V14.48A3.46,3.46,0,0,0,70,11H61.42V10A3.92,3.92,0,0,0,57.5,6.12h-15A3.92,3.92,0,0,0,38.58,10v1H30a3.46,3.46,0,0,0-3.45,3.45v7.89a3.5,3.5,0,0,0,.33,1.45H25.37a1,1,0,0,0-1,1v7.07a8.37,8.37,0,0,0,3.82,7l1.29,32.54a3.68,3.68,0,0,0,.4,1.44H24A5.07,5.07,0,0,0,19,78v9.16A5.08,5.08,0,0,0,24,92.2H35.37v1.13a1,1,0,0,0,1,1h4.31a1,1,0,0,0,1-1V92.2H58.32v1.13a1,1,0,0,0,1,1h4.31a1,1,0,0,0,1-1V92.2H76A5.08,5.08,0,0,0,81,87.12V78A5.07,5.07,0,0,0,76,72.89ZM40.58,10A1.93,1.93,0,0,1,42.5,8.12h15A1.93,1.93,0,0,1,59.42,10v1H40.58Zm-12,4.44A1.45,1.45,0,0,1,30,13H70a1.45,1.45,0,0,1,1.45,1.45v7.89A1.45,1.45,0,0,1,70,23.82H30a1.45,1.45,0,0,1-1.45-1.45ZM26.37,31.89V25.82H73.63v6.07a6.38,6.38,0,0,1-6.38,6.38H32.75A6.38,6.38,0,0,1,26.37,31.89Zm19,33.35V62.93h9.28v2.31Zm5.8,2v5.54H48.84V67.24Zm0-6.31H48.84V40.27h2.32ZM35.37,90.2H24A3.08,3.08,0,0,1,21,87.12V78A3.08,3.08,0,0,1,24,74.89H35.37Zm4.31,2.13H37.37V73.54h2.31Zm1-20.79H36.37a1,1,0,0,0-1,1v.24H33a1.5,1.5,0,0,1-1.5-1.42L30.23,39.88a8.41,8.41,0,0,0,2.52.39H46.84V60.93H44.36a1,1,0,0,0-1,1v4.31a1,1,0,0,0,1,1h2.48v5.54H41.68v-.24A1,1,0,0,0,40.68,71.54ZM58.32,90.2H41.68V74.89H58.32Zm4.31,2.13H60.32V73.54h2.31Zm1-20.79H59.32a1,1,0,0,0-1,1v.24H53.16V67.24h2.48a1,1,0,0,0,1-1V61.93a1,1,0,0,0-1-1H53.16V40.27H67.25a8.41,8.41,0,0,0,2.52-.39L68.52,71.35A1.5,1.5,0,0,1,67,72.78H64.63v-.24A1,1,0,0,0,63.63,71.54ZM79,87.12A3.08,3.08,0,0,1,76,90.2H64.63V74.89H76A3.08,3.08,0,0,1,79,78Z" />
+    </svg>
+  );
+}
+
+function HireRest() {
+  const [enabled, setEnabled] = useState(false);
+  return (
+    <Switch
+      checked={enabled}
+      onChange={setEnabled}
+      className={classNames(
+        enabled
+          ? "bg-yellow-400 focus:ring-yellow-300"
+          : "bg-purple-700 focus:ring-purple-600",
+        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2  focus:ring-offset-2"
+      )}
+    >
+      <span className="sr-only">Use setting</span>
+      <span
+        className={classNames(
+          enabled ? "translate-x-5" : "translate-x-0",
+          "pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+        )}
+      >
+        <span
+          className={classNames(
+            enabled
+              ? "opacity-0 duration-100 ease-out"
+              : "opacity-100 duration-200 ease-in",
+            "absolute inset-0 flex h-full w-full items-center justify-center transition-opacity"
+          )}
+          aria-hidden="true"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="w-4 h-4 text-purple-800"
+          >
+            <path d="M14.438 10.148c.19-.425-.321-.787-.748-.601A5.5 5.5 0 0 1 6.453 2.31c.186-.427-.176-.938-.6-.748a6.501 6.501 0 1 0 8.585 8.586Z" />
+          </svg>
+        </span>
+        <span
+          className={classNames(
+            enabled
+              ? "opacity-100 duration-200 ease-in"
+              : "opacity-0 duration-100 ease-out",
+            "absolute inset-0 flex h-full w-full items-center justify-center transition-opacity"
+          )}
+          aria-hidden="true"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="w-4 h-4 text-yellow-500"
+          >
+            <path d="M8 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 1ZM10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM12.95 4.11a.75.75 0 1 0-1.06-1.06l-1.062 1.06a.75.75 0 0 0 1.061 1.062l1.06-1.061ZM15 8a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 15 8ZM11.89 12.95a.75.75 0 0 0 1.06-1.06l-1.06-1.062a.75.75 0 0 0-1.062 1.061l1.061 1.06ZM8 12a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 12ZM5.172 11.89a.75.75 0 0 0-1.061-1.062L3.05 11.89a.75.75 0 1 0 1.06 1.06l1.06-1.06ZM4 8a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 4 8ZM4.11 5.172A.75.75 0 0 0 5.173 4.11L4.11 3.05a.75.75 0 1 0-1.06 1.06l1.06 1.06Z" />
+          </svg>
+        </span>
+      </span>
     </Switch>
   );
 }
