@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "aptos:compile": "cd move && aptos move compile",
+    "aptos:run:my_script": "cd move && aptos move run-script --sources/my_script.move"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.9.0",
