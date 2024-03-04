@@ -6,6 +6,7 @@ export const characters = [
     profession: "Navigator",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 1,
@@ -14,6 +15,7 @@ export const characters = [
     profession: "Naturalist",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 2,
@@ -22,6 +24,7 @@ export const characters = [
     profession: "Meteorologist",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 3,
@@ -30,6 +33,7 @@ export const characters = [
     profession: "Scout",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 4,
@@ -46,6 +50,7 @@ export const characters = [
     profession: "Hunter",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 6,
@@ -54,6 +59,7 @@ export const characters = [
     profession: "Linguist",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 7,
@@ -62,6 +68,7 @@ export const characters = [
     profession: "Technologist",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 8,
@@ -70,6 +77,7 @@ export const characters = [
     profession: "Excavator",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 9,
@@ -78,6 +86,7 @@ export const characters = [
     profession: "Archaeologist",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 10,
@@ -86,6 +95,7 @@ export const characters = [
     profession: "Doctor",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 11,
@@ -94,5 +104,6 @@ export const characters = [
     profession: "Engineer",
     salary: 1,
     health: 4,
+    morale: 5,
   },
 ];
