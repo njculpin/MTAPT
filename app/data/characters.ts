@@ -42,6 +42,7 @@ export const characters = [
     profession: "Scientist",
     salary: 1,
     health: 4,
+    morale: 5,
   },
   {
     id: 5,
