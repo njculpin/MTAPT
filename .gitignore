@@ -38,3 +38,4 @@ next-env.d.ts
 # aptos
 .aptos
 **/move/build
+**/move/.aptos
