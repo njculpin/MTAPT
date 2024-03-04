@@ -17,7 +17,6 @@ module mtaptos_addr::main {
 
   struct Weather has store, drop, copy {
     id: u64,
-    time: u64,
     name: String,
     low_temp: u8,
     high_temp: u8,
@@ -48,43 +47,50 @@ module mtaptos_addr::main {
   /*
     Create possible weather table
   */
-  public fun create_initial_weather(account: &signer, _weather: Weather) acquires WeatherForecast {
+  public fun create_initial_weather(
+    account: &signer,
+    _id: u64,
+    _name: String,
+    _low_temp: u8,
+    _high_temp: u8,
+    _precipitation: u8,
+    _wind_strength: u8,
+    _wind_direction: u8,
+    _next: vector<u64>
+    ) acquires WeatherForecast {
+
     let addr = signer::address_of(account);
     assert_is_owner(addr);
     assert_uninitialized(@mtaptos_addr);
+
     let weather_forecast = borrow_global_mut<WeatherForecast>(@mtaptos_addr);
     let weather = Weather {
-      id: _weather.id,
-      time: _weather.time,
-      name: _weather.name,
-      low_temp: _weather.low_temp,
-      high_temp: _weather.high_temp,
-      precipitation: _weather.precipitation,
-      wind_strength: _weather.wind_strength,
-      wind_direction: _weather.wind_direction,
-      next: _weather.next,
+      id: _id,
+      name: _name,
+      low_temp: _low_temp,
+      high_temp: _high_temp,
+      precipitation: _precipitation,
+      wind_strength: _wind_strength,
+      wind_direction: _wind_direction,
+      next: _next,
     };
-    table::upsert(&mut weather_forecast.possible_weather, _weather.id, weather);
+
+    table::upsert(&mut weather_forecast.possible_weather, _id, weather);
     vector::push_back(&mut weather_forecast.weather, weather);
   }
 
   /*
-    Generate new weather conditions from possible weather conditions
+    Create initial forecast
   */
-  public fun create_weather(_weather: Weather) acquires WeatherForecast {
+  public fun create_initial_forecast() acquires WeatherForecast {
     assert_uninitialized(@mtaptos_addr);
+
     let weather_forecast = borrow_global_mut<WeatherForecast>(@mtaptos_addr);
-    let total_weather = vector::length(&weather_forecast.weather);
-    let last_weather = *vector::borrow(&weather_forecast.weather, total_weather);
-    let next_weather_length = vector::length(&mut last_weather.next);
-    let next_index = randomness::u64_range(0, next_weather_length);
-    let next_weather_ids = last_weather.next;
-    let next_weather_id = *vector::borrow(&next_weather_ids, next_index);
-    let next_weather_details = table::borrow_mut(&mut weather_forecast.possible_weather, next_weather_id);
+    let next_weather_details = table::borrow_mut(&mut weather_forecast.possible_weather, 0);
     let time = timestamp::now_microseconds();
+
     let weather = Weather {
-      id: total_weather+1,
-      time: time,
+      id: time,
       name: next_weather_details.name,
       low_temp: next_weather_details.low_temp,
       high_temp: next_weather_details.high_temp,
@@ -93,7 +99,85 @@ module mtaptos_addr::main {
       wind_direction: next_weather_details.wind_direction,
       next: next_weather_details.next,
     };
+
     vector::push_back(&mut weather_forecast.weather, weather);
+  }
+
+  /*
+    Generate new weather conditions from possible weather conditions
+  */
+  public fun create_weather(_weather: Weather) acquires WeatherForecast {
+    assert_uninitialized(@mtaptos_addr);
+
+    let weather_forecast = borrow_global_mut<WeatherForecast>(@mtaptos_addr);
+    let total_weather = vector::length(&weather_forecast.weather);
+
+    let last_weather = *vector::borrow(&weather_forecast.weather, total_weather);
+    let next_weather_length = vector::length(&mut last_weather.next);
+    let next_index = randomness::u64_range(0, next_weather_length);
+
+    let next_weather_ids = last_weather.next;
+    let next_weather_id = *vector::borrow(&next_weather_ids, next_index);
+
+    let next_weather_details = table::borrow_mut(&mut weather_forecast.possible_weather, next_weather_id);
+    let time = timestamp::now_microseconds();
+
+    let weather = Weather {
+      id: time,
+      name: next_weather_details.name,
+      low_temp: next_weather_details.low_temp,
+      high_temp: next_weather_details.high_temp,
+      precipitation: next_weather_details.precipitation,
+      wind_strength: next_weather_details.wind_strength,
+      wind_direction: next_weather_details.wind_direction,
+      next: next_weather_details.next,
+    };
+
+    vector::push_back(&mut weather_forecast.weather, weather);
+  }
+
+  #[test(owner=@0x123,to=@0x768)]
+  fun test_weather(admin: signer,to: signer) acquires WeatherForecast {
+
+    init_module(&admin);
+
+    let first = create_initial_weather(
+      admin,
+      1,
+      b"Partly Cloudy",
+      50,
+      65,
+      100,
+      2,
+      4,
+      vector<u64>[ 2, 3 ],
+      );
+
+    let second = create_initial_weather(
+      admin,
+      2,
+      b"Sunny",
+      50,
+      65,
+      100,
+      2,
+      4,
+      vector<u64>[ 1, 3 ],
+      );
+
+    let third = create_initial_weather(
+      admin,
+      3,
+      b"Scattered Showers",
+      50,
+      65,
+      100,
+      2,
+      4,
+      vector<u64>[ 2 ],
+      );
+
+    create_initial_forecast(admin)
   }
   
 }
