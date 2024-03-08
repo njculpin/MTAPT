@@ -38,9 +38,29 @@ module basecamp::main {
     speed: u8,
   }
 
+  struct Discovery has store, drop, copy {
+    gold_value: u8,
+    damage_radius: u8,
+    improvement_radius: u8,
+    health_damage: u8,
+    health_improvement: u8,
+    strength_damage: u8,
+    strength_improvement: u8,
+    endurance_damage: u8,
+    endurance_improvement: u8,
+    intelligence_damage: u8,
+    intelligence_improvement: u8,
+    perception_damage: u8,
+    perception_improvement: u8,
+    speed_damage: u8,
+    speed_improvement: u8
+  }
+
   struct Position has store, drop, copy {
     x: u8,
-    y: u8
+    y: u8,
+    discovery_count: u8,
+    discoveries: SimpleMap<u64, Discovery>
   }
 
   struct Basecamp has key {
@@ -53,6 +73,10 @@ module basecamp::main {
     extend_ref: ExtendRef,
     mutator_ref: token::MutatorRef,
     burn_ref: token::BurnRef,
+  }
+
+  struct WorldMap has key {
+    map: SimpleMap<u64, Position>
   }
 
   // collection signer
@@ -86,8 +110,15 @@ module basecamp::main {
     move_to(app_signer, CollectionCapability {
         extend_ref,
     });
-    // how to create an object that every NFT can call?
+    
     create_basecamp_collection(app_signer);
+
+    // World Map to store large discoveries
+    let map:SimpleMap<u64,Position> = simple_map::create(); 
+    let world_map = WorldMap {
+      map: map
+    };
+    move_to(app_signer, world_map);
   }
 
   fun get_collection_address(): address {
@@ -171,7 +202,8 @@ module basecamp::main {
     let random_y = randomness::u8_range(1, 30);
     let position = Position {
       x: random_x,
-      y: random_y
+      y: random_y,
+      discovery_count: 0
     };
     simple_map::add(&mut map,1,position); 
 
@@ -240,32 +272,39 @@ module basecamp::main {
 
   fun rest(basecamp_address: address){
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun move(){
+  fun move(basecamp_address: address){
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun next_weather(){
+  fun next_weather(basecamp_address: address){
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun explore(){
+  fun explore(basecamp_address: address){
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun buy(){
+  fun buy(basecamp_address: address){
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun pack(){
+  fun pack(basecamp_address: address){
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun unpack(){
+  fun unpack(basecamp_address: address){
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
   
 }
