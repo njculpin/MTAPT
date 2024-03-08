@@ -1,183 +1,222 @@
-module mtaptos_addr::main {
+module basecamp::main {
 
+  use aptos_framework::account;
+  use aptos_framework::event;
+  use aptos_framework::object;
   use aptos_framework::randomness;
-  use aptos_std::table::{Self, Table};
-  use std::signer;
-  use std::string::{String};
+  use aptos_framework::object::ExtendRef;
+  use aptos_std::string_utils::{to_string};
+  use std::option;
+  use std::signer::address_of;
+  use std::string::{String, utf8};
+  use std::simple_map::{Self, SimpleMap};
+  use aptos_token_objects::collection;
+  use aptos_token_objects::token;
   use std::timestamp;
-  use std::vector;
-  
+
+  const APP_OBJECT_SEED: vector<u8> = b"BASECAMP";
+  const BASECAMP_COLLECTION_NAME: vector<u8> = b"Basecamp Collection";
+  const BASECAMP_COLLECTION_DESCRIPTION: vector<u8> = b"Basecamp Collection Description";
+  const BASECAMP_COLLECTION_URI: vector<u8> = b"png";
   const ERR_NOT_INITIALIZED: u64 = 1;
   const ERR_NOT_ADMIN: u64 = 1;
 
-  struct WeatherForecast has key {
-    possible_weather: Table<u64, Weather>,
-    weather: vector<Weather>,
-  }
-
   struct Weather has store, drop, copy {
-    id: u64,
-    name: String,
-    low_temp: u8,
-    high_temp: u8,
-    precipitation: u8,
-    wind_strength: u8,
-    wind_direction: u8,
-    next: vector<u64>,
+    time: u64,
+    temp: u8,
+    rain: u8,
+    wind: u8,
   }
 
-  public fun assert_is_owner(addr: address) {
-    assert!(addr == @mtaptos_addr, ERR_NOT_ADMIN);
+  struct Crew has store, drop, copy {
+    live: bool,
+    health: u8,
+    strength: u8,
+    endurance: u8,
+    intelligence: u8,
+    perception: u8,
+    speed: u8,
+  }
+
+  struct Position has store, drop, copy {
+    x: u8,
+    y: u8
+  }
+
+  struct Basecamp has key {
+    gold: u8,
+    weather: Weather,
+    crew: SimpleMap<u8, Crew>,
+    map: SimpleMap<u64, Position>,
+    position: Position,
+    extend_ref: ExtendRef,
+    mutator_ref: token::MutatorRef,
+    burn_ref: token::BurnRef,
+  }
+
+  // collection signer
+  struct CollectionCapability has key {
+    extend_ref: ExtendRef,
+  }
+
+  struct MintBasecampEvents has key {
+    mint_basecamp_events: event::EventHandle<MintBasecampEvent>,
+  }
+
+  struct MintBasecampEvent has drop, store {
+    basecamp_address: address,
+    token_name: String,
   }
 
   public fun assert_uninitialized(addr: address) {
-    assert!(exists<WeatherForecast>(addr), ERR_NOT_INITIALIZED);
+    assert!(exists<Basecamp>(addr), ERR_NOT_INITIALIZED);
   } 
 
   fun init_module(account: &signer) {
-    let addr = signer::address_of(account);
-    assert_is_owner(addr);
-    let weather_forecast = WeatherForecast {
-      possible_weather: table::new(),
-      weather: vector::empty<Weather>()
-    };
-    move_to(account, weather_forecast);
+    let constructor_ref = object::create_named_object(
+        account,
+        APP_OBJECT_SEED,
+    );
+    let extend_ref = object::generate_extend_ref(&constructor_ref);
+    let app_signer = &object::generate_signer(&constructor_ref);
+    move_to(account, MintBasecampEvents {
+        mint_basecamp_events: account::new_event_handle<MintBasecampEvent>(account),
+    });
+    move_to(app_signer, CollectionCapability {
+        extend_ref,
+    });
+    create_basecamp_collection(app_signer);
   }
 
-  /*
-    Create possible weather table
-  */
-  public fun create_initial_weather(
-    account: &signer,
-    _id: u64,
-    _name: String,
-    _low_temp: u8,
-    _high_temp: u8,
-    _precipitation: u8,
-    _wind_strength: u8,
-    _wind_direction: u8,
-    _next: vector<u64>
-    ) acquires WeatherForecast {
-
-    let addr = signer::address_of(account);
-    assert_is_owner(addr);
-    assert_uninitialized(@mtaptos_addr);
-
-    let weather_forecast = borrow_global_mut<WeatherForecast>(@mtaptos_addr);
-    let weather = Weather {
-      id: _id,
-      name: _name,
-      low_temp: _low_temp,
-      high_temp: _high_temp,
-      precipitation: _precipitation,
-      wind_strength: _wind_strength,
-      wind_direction: _wind_direction,
-      next: _next,
-    };
-
-    table::upsert(&mut weather_forecast.possible_weather, _id, weather);
-    vector::push_back(&mut weather_forecast.weather, weather);
+  fun get_collection_address(): address {
+    object::create_object_address(&@basecamp, APP_OBJECT_SEED)
   }
 
-  /*
-    Create initial forecast
-  */
-  public fun create_initial_forecast() acquires WeatherForecast {
-    assert_uninitialized(@mtaptos_addr);
+  fun get_collection_signer(collection_address: address): signer acquires CollectionCapability {
+        object::generate_signer_for_extending(&borrow_global<CollectionCapability>(collection_address).extend_ref)
+    }
 
-    let weather_forecast = borrow_global_mut<WeatherForecast>(@mtaptos_addr);
-    let next_weather_details = table::borrow_mut(&mut weather_forecast.possible_weather, 0);
+  fun get_basecamp_signer(basecamp_address: address): signer acquires Basecamp {
+      object::generate_signer_for_extending(&borrow_global<Basecamp>(basecamp_address).extend_ref)
+  }
+
+  fun create_basecamp_collection(creator: &signer) {
+    let description = utf8(BASECAMP_COLLECTION_DESCRIPTION);
+    let name = utf8(BASECAMP_COLLECTION_NAME);
+    let uri = utf8(BASECAMP_COLLECTION_URI);
+    collection::create_unlimited_collection(
+        creator,
+        description,
+        name,
+        option::none(),
+        uri,
+    );
+  }
+
+  entry fun create_basecamp(user: &signer, crew_count: u8) acquires CollectionCapability, MintBasecampEvents {
+    create_basecamp_internal(user, crew_count);
+  }
+
+  fun create_basecamp_internal(user: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
+
+    let uri = utf8(BASECAMP_COLLECTION_URI);
+    let description = utf8(BASECAMP_COLLECTION_DESCRIPTION);
+    let user_address = address_of(user);
+    let token_name = to_string(&user_address);
+    
+    // gold
+    let minimum_gold = crew_count * 2;
+    let maximum_gold = crew_count * 10;
+    let gold = randomness::u8_range(minimum_gold, maximum_gold);
+
+    // weather,
     let time = timestamp::now_microseconds();
-
+    let temp = randomness::u8_range(45, 75);
+    let rain = randomness::u8_range(0, 50);
+    let wind = randomness::u8_range(5, 12);
     let weather = Weather {
-      id: time,
-      name: next_weather_details.name,
-      low_temp: next_weather_details.low_temp,
-      high_temp: next_weather_details.high_temp,
-      precipitation: next_weather_details.precipitation,
-      wind_strength: next_weather_details.wind_strength,
-      wind_direction: next_weather_details.wind_direction,
-      next: next_weather_details.next,
+      time: time,
+      temp: temp,
+      rain: rain,
+      wind: wind
     };
 
-    vector::push_back(&mut weather_forecast.weather, weather);
-  }
-
-  /*
-    Generate new weather conditions from possible weather conditions
-  */
-  public fun create_weather(_weather: Weather) acquires WeatherForecast {
-    assert_uninitialized(@mtaptos_addr);
-
-    let weather_forecast = borrow_global_mut<WeatherForecast>(@mtaptos_addr);
-    let total_weather = vector::length(&weather_forecast.weather);
-
-    let last_weather = *vector::borrow(&weather_forecast.weather, total_weather);
-    let next_weather_length = vector::length(&mut last_weather.next);
-    let next_index = randomness::u64_range(0, next_weather_length);
-
-    let next_weather_ids = last_weather.next;
-    let next_weather_id = *vector::borrow(&next_weather_ids, next_index);
-
-    let next_weather_details = table::borrow_mut(&mut weather_forecast.possible_weather, next_weather_id);
-    let time = timestamp::now_microseconds();
-
-    let weather = Weather {
-      id: time,
-      name: next_weather_details.name,
-      low_temp: next_weather_details.low_temp,
-      high_temp: next_weather_details.high_temp,
-      precipitation: next_weather_details.precipitation,
-      wind_strength: next_weather_details.wind_strength,
-      wind_direction: next_weather_details.wind_direction,
-      next: next_weather_details.next,
+    // crew,
+    let crew:SimpleMap<u8,Crew> = simple_map::create();
+    for (i in 1..(crew_count+1)){
+      let strength = randomness::u8_range(1, 5);
+      let endurance = randomness::u8_range(1, 10);
+      let intelligence = randomness::u8_range(2, 7);
+      let perception = randomness::u8_range(2, 10);
+      let speed = randomness::u8_range(1, 3);
+      let crew_member = Crew {
+        live: true,
+        health: 5,
+        strength: strength,
+        endurance: endurance,
+        intelligence: intelligence,
+        perception: perception,
+        speed: speed,
+      };
+      simple_map::add(&mut crew,i,crew_member); 
     };
 
-    vector::push_back(&mut weather_forecast.weather, weather);
-  }
+    // visited map,
+    let map:SimpleMap<u64,Position> = simple_map::create(); 
+    
+    // starting position,
+    let random_x = randomness::u8_range(1, 30);
+    let random_y = randomness::u8_range(1, 30);
+    let position = Position {
+      x: random_x,
+      y: random_y
+    };
+    simple_map::add(&mut map,1,position); 
 
-  #[test(owner=@0x123,to=@0x768)]
-  fun test_weather(admin: signer,to: signer) acquires WeatherForecast {
+    let collection_address = get_collection_address();
+    let constructor_ref = &token::create(
+        &get_collection_signer(collection_address),
+        utf8(BASECAMP_COLLECTION_NAME),
+        description,
+        token_name,
+        option::none(),
+        uri,
+    );
 
-    init_module(&admin);
+    let token_signer_ref = &object::generate_signer(constructor_ref);
+    let basecamp_address = address_of(token_signer_ref);
 
-    let first = create_initial_weather(
-      admin,
-      1,
-      b"Partly Cloudy",
-      50,
-      65,
-      100,
-      2,
-      4,
-      vector<u64>[ 2, 3 ],
-      );
+    let extend_ref = object::generate_extend_ref(constructor_ref);
+    let mutator_ref = token::generate_mutator_ref(constructor_ref);
+    let burn_ref = token::generate_burn_ref(constructor_ref);
+    let transfer_ref = object::generate_transfer_ref(constructor_ref);
 
-    let second = create_initial_weather(
-      admin,
-      2,
-      b"Sunny",
-      50,
-      65,
-      100,
-      2,
-      4,
-      vector<u64>[ 1, 3 ],
-      );
+    // Initialize and set default Basecamp struct values
+    let basecamp = Basecamp {
+        gold: gold,
+        weather: weather,
+        crew: crew,
+        map: map,
+        position: position,
+        extend_ref,
+        mutator_ref,
+        burn_ref,
+    };
+    move_to(token_signer_ref, basecamp);
 
-    let third = create_initial_weather(
-      admin,
-      3,
-      b"Scattered Showers",
-      50,
-      65,
-      100,
-      2,
-      4,
-      vector<u64>[ 2 ],
-      );
+    // Emit event for minting Basecamp token
+    event::emit_event<MintBasecampEvent>(
+        &mut borrow_global_mut<MintBasecampEvents>(@basecamp).mint_basecamp_events,
+        MintBasecampEvent {
+            basecamp_address: address_of(token_signer_ref),
+            token_name,
+        },
+    );
 
-    create_initial_forecast(admin)
+    // Transfer the Basecamp to the user
+    object::transfer_with_ref(object::generate_linear_transfer_ref(&transfer_ref), address_of(user));
+
+    basecamp_address
   }
   
 }

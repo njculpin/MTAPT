@@ -1,17 +1,16 @@
 [package]
-name = "mtaptos"
+name = "basecamp"
 version = "1.0.0"
 authors = ['Nick Culpin - https://github.com/njculpin']
 
 [addresses]
-mtaptos_addr='580adc1efb1099fa4638517bbe51f43c90bfd50b6c747329c904c02e7c3aa678'
+basecamp='580adc1efb1099fa4638517bbe51f43c90bfd50b6c747329c904c02e7c3aa678'
 
 [dev-addresses]
 
-[dependencies.AptosFramework]
-git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "main"
-subdir = "aptos-move/framework/aptos-framework"
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "randomnet", subdir = "aptos-move/framework/aptos-framework" }
+AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-core.git", rev = "randomnet", subdir = "aptos-move/framework/aptos-token-objects" }
 
 [dev-dependencies]
 
