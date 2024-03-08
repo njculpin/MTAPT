@@ -49,6 +49,7 @@ module basecamp::main {
     crew: SimpleMap<u8, Crew>,
     map: SimpleMap<u64, Position>,
     position: Position,
+    home: Position,
     extend_ref: ExtendRef,
     mutator_ref: token::MutatorRef,
     burn_ref: token::BurnRef,
@@ -85,6 +86,7 @@ module basecamp::main {
     move_to(app_signer, CollectionCapability {
         extend_ref,
     });
+    // how to create an object that every NFT can call?
     create_basecamp_collection(app_signer);
   }
 
@@ -198,6 +200,7 @@ module basecamp::main {
         crew: crew,
         map: map,
         position: position,
+        home: position,
         extend_ref,
         mutator_ref,
         burn_ref,
@@ -217,6 +220,52 @@ module basecamp::main {
     object::transfer_with_ref(object::generate_linear_transfer_ref(&transfer_ref), address_of(user));
 
     basecamp_address
+  }
+
+  // CONTROLS
+  fun check_basecamp_exist_and_crew_alive(basecamp_address: address) acquires Basecamp {
+    let basecamp_exists = exists<Basecamp>(basecamp_address);
+    assert!(basecamp_exists, BASECAMP_MISSING);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    // check if all crew are still alive
+   //  assert!(aptogotchi_ref.live, EDEAD_APTOGOTCHI_CANNOT_MOVE)
+  }
+
+  fun crew_at_home(basecamp_address: address) acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    assert!(basecamp.position.x == basecamp.home.x, NOT_HOME);
+    assert!(basecamp.position.y == basecamp.home.y, NOT_HOME);
+  }
+
+  fun rest(basecamp_address: address){
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+  }
+
+  fun move(){
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+  }
+
+  fun next_weather(){
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+  }
+
+  fun explore(){
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+  }
+
+  fun buy(){
+    crew_at_home(basecamp_address);
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+  }
+
+  fun pack(){
+    crew_at_home(basecamp_address);
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+  }
+
+  fun unpack(){
+    check_basecamp_exist_and_crew_alive(basecamp_address);
   }
   
 }
