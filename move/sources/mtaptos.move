@@ -18,8 +18,15 @@ module basecamp::main {
   const BASECAMP_COLLECTION_NAME: vector<u8> = b"Basecamp Collection";
   const BASECAMP_COLLECTION_DESCRIPTION: vector<u8> = b"Basecamp Collection Description";
   const BASECAMP_COLLECTION_URI: vector<u8> = b"png";
-  const ERR_NOT_INITIALIZED: u64 = 1;
-  const ERR_NOT_ADMIN: u64 = 1;
+  const MAX_CREW: u8 = 10;
+
+  const ERR_NOT_INITIALIZED: u8 = 1;
+  const ERR_NOT_ADMIN: u8 = 2;
+  const ERR_MAX_CREW: u8 = 3;
+  const ERR_CREW_NOT_HOME: u8 = 4;
+  const ERR_BASECAMP_MISSING: u8 = 5;
+  const ERR_BASECAMP_DEAD: u8 = 6;
+  const EKEY_NOT_FOUND: u8 = 7;
 
   struct Weather has store, drop, copy {
     time: u64,
@@ -57,27 +64,25 @@ module basecamp::main {
   }
 
   struct Position has store, drop, copy {
-    x: u8,
-    y: u8,
-    discovery_count: u8,
-    discoveries: SimpleMap<u64, Discovery>
+    lat: u8,
+    long: u8,
   }
 
   struct Basecamp has key {
+    live: bool,
     gold: u8,
     weather: Weather,
     crew: SimpleMap<u8, Crew>,
-    world: SimpleMap<u64, Position>,
-    position: Position,
-    home: Position,
+    lat: u8,
+    long: u8,
     extend_ref: ExtendRef,
     mutator_ref: token::MutatorRef,
     burn_ref: token::BurnRef,
   }
 
-  struct WorldMap has key {
-    world: SimpleMap<u64, Position>
-  }
+  // struct WorldMap has key {
+  //   world: SimpleMap<u64, Position>
+  // }
 
   // collection signer
   struct CollectionCapability has key {
@@ -114,11 +119,11 @@ module basecamp::main {
     create_basecamp_collection(app_signer);
 
     // World Map to store large discoveries
-    let world:SimpleMap<u64,Position> = simple_map::create(); 
-    let world_map = WorldMap {
-      world: world
-    };
-    move_to(app_signer, world_map);
+    // let world:SimpleMap<u64,Position> = simple_map::create(); 
+    // let world_map = WorldMap {
+    //   world: world
+    // };
+    // move_to(app_signer, world_map);
   }
 
   fun get_collection_address(): address {
@@ -151,6 +156,8 @@ module basecamp::main {
   }
 
   fun create_basecamp_internal(user: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
+
+    assert!(crew_count <= MAX_CREW>, ERR_BASECAMP_MISSING);
 
     let uri = utf8(BASECAMP_COLLECTION_URI);
     let description = utf8(BASECAMP_COLLECTION_DESCRIPTION);
@@ -194,19 +201,6 @@ module basecamp::main {
       simple_map::add(&mut crew,i,crew_member); 
     };
 
-    // visited map,
-    let world:SimpleMap<u64,Position> = simple_map::create(); 
-    let discoveries:SimpleMap<u64,Discovery> = simple_map::create(); 
-    
-    // starting position,
-    let position = Position {
-      x: 1,
-      y: 1,
-      discovery_count: 0
-      discoveries: discoveries
-    };
-    simple_map::add(&mut world,1,position); 
-
     let collection_address = get_collection_address();
     let constructor_ref = &token::create(
         &get_collection_signer(collection_address),
@@ -227,12 +221,12 @@ module basecamp::main {
 
     // Initialize and set default Basecamp struct values
     let basecamp = Basecamp {
+        live: true,
         gold: gold,
         weather: weather,
         crew: crew,
-        world: world,
-        position: position,
-        home: position,
+        lat: 1,
+        long: 1,
         extend_ref,
         mutator_ref,
         burn_ref,
@@ -257,63 +251,66 @@ module basecamp::main {
   // CONTROLS
   fun check_basecamp_exist_and_crew_alive(basecamp_address: address) acquires Basecamp {
     let basecamp_exists = exists<Basecamp>(basecamp_address);
-    assert!(basecamp_exists, BASECAMP_MISSING);
+    assert!(basecamp_exists, ERR_BASECAMP_MISSING);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
-    // check if all crew are still alive
-   //  assert!(aptogotchi_ref.live, EDEAD_APTOGOTCHI_CANNOT_MOVE)
+    assert!(basecamp.live, ERR_BASECAMP_DEAD);
   }
 
   fun crew_at_home(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
-    assert!(basecamp.position.x == basecamp.home.x, NOT_HOME);
-    assert!(basecamp.position.y == basecamp.home.y, NOT_HOME);
+    assert!(basecamp.lat == 1, ERR_CREW_NOT_HOME);
+    assert!(basecamp.long == 1, ERR_CREW_NOT_HOME);
   }
 
-  fun rest(basecamp_address: address){
+  fun rest_crew(basecamp_address: address) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    next_weather(basecamp_address);
+  }
+
+  fun move_crew(basecamp_address: address, lat: u8, long: u8) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
+    let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
+    *lat_ref = *lat_ref + lat;
+    *lat_ref = *lat_ref + long;
+  }
+
+  fun next_weather(basecamp_address: address) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun move(basecamp_address: address){
+  fun explore(basecamp_address: address) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun next_weather(basecamp_address: address){
+  fun get_store_items(basecamp_address: address) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun explore(basecamp_address: address){
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun get_store_items(basecamp_address: address){
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun buy(basecamp_address: address){
+  fun buy(basecamp_address: address) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun sell(basecamp_address: address){
+  fun sell(basecamp_address: address) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun pack(basecamp_address: address){
+  fun pack(basecamp_address: address) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun unpack(basecamp_address: address){
+  fun unpack(basecamp_address: address) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
