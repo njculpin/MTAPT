@@ -18,6 +18,7 @@ module basecamp::main {
   const BASECAMP_COLLECTION_DESCRIPTION: vector<u8> = b"Basecamp Collection Description";
   const BASECAMP_COLLECTION_URI: vector<u8> = b"png";
   const MAX_CREW: u8 = 10;
+  const MAP_SIZE: u64 = 100;
 
   const ERR_NOT_INITIALIZED: u64 = 1;
   const ERR_NOT_ADMIN: u64 = 2;
@@ -41,8 +42,8 @@ module basecamp::main {
     intelligence: u8,
     perception: u8,
     speed: u8,
-    lat: u8,
-    long: u8
+    lat: u64,
+    long: u64
   }
 
   struct Discovery has store, drop, copy {
@@ -74,8 +75,8 @@ module basecamp::main {
     weather: Weather,
     crew: Table<u64, Crew>,
     crew_count: u64,
-    lat: u8,
-    long: u8,
+    lat: u64,
+    long: u64,
     extend_ref: ExtendRef,
     mutator_ref: token::MutatorRef,
     burn_ref: token::BurnRef,
@@ -302,7 +303,7 @@ module basecamp::main {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
     let new_lat = crew_member.lat - 1;
-    assert!(new_lat == 0, ERR_MOVE_TOO_FAR);
+    assert!(new_lat > 0, ERR_MOVE_TOO_FAR);
     crew_member.lat = new_lat;
   }
 
@@ -310,7 +311,7 @@ module basecamp::main {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
     let new_long = crew_member.long + 1;
-    assert!(new_long > 100, ERR_MOVE_TOO_FAR);
+    assert!(new_long < MAP_SIZE, ERR_MOVE_TOO_FAR);
     crew_member.long = new_long;
   }
 
@@ -318,7 +319,7 @@ module basecamp::main {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
     let new_lat = crew_member.lat + 1;
-    assert!(new_lat > 100, ERR_MOVE_TOO_FAR);
+    assert!(new_lat < MAP_SIZE, ERR_MOVE_TOO_FAR);
     crew_member.lat = new_lat;
   }
 
@@ -326,7 +327,7 @@ module basecamp::main {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
     let new_long = crew_member.long - 1;
-    assert!(new_long == 0, ERR_MOVE_TOO_FAR);
+    assert!(new_long > 0, ERR_MOVE_TOO_FAR);
     crew_member.long = new_long;
   }
 
@@ -349,21 +350,21 @@ module basecamp::main {
   fun move_basecamp_north(basecamp_address: address) acquires Basecamp {
     let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
     let new_lat = *lat_ref - 1;
-     assert!(new_lat == 0, ERR_MOVE_TOO_FAR);
+     assert!(new_lat > 0, ERR_MOVE_TOO_FAR);
     *lat_ref =new_lat;
   }
 
   fun move_basecamp_south(basecamp_address: address) acquires Basecamp {
     let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
     let new_lat = *lat_ref + 1;
-    assert!(new_lat > 0, ERR_MOVE_TOO_FAR);
+    assert!(new_lat < MAP_SIZE, ERR_MOVE_TOO_FAR);
     *lat_ref = new_lat;
   }
 
   fun move_basecamp_east(basecamp_address: address) acquires Basecamp {
     let long_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
     let new_long = *long_ref + 1;
-    assert!(new_long < 100, ERR_MOVE_TOO_FAR);
+    assert!(new_long < MAP_SIZE, ERR_MOVE_TOO_FAR);
     *long_ref = new_long;
   }
 
