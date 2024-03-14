@@ -9,10 +9,10 @@ module basecamp::main {
   use std::option;
   use std::signer::address_of;
   use std::string::{String, utf8};
-  use std::simple_map::{Self, SimpleMap};
+  use std::vector;
+  // use std::simple_map::{Self, SimpleMap};
   use aptos_token_objects::collection;
   use aptos_token_objects::token;
-  use std::timestamp;
 
   const APP_OBJECT_SEED: vector<u8> = b"BASECAMP";
   const BASECAMP_COLLECTION_NAME: vector<u8> = b"Basecamp Collection";
@@ -20,16 +20,15 @@ module basecamp::main {
   const BASECAMP_COLLECTION_URI: vector<u8> = b"png";
   const MAX_CREW: u8 = 10;
 
-  const ERR_NOT_INITIALIZED: u8 = 1;
-  const ERR_NOT_ADMIN: u8 = 2;
-  const ERR_MAX_CREW: u8 = 3;
-  const ERR_CREW_NOT_HOME: u8 = 4;
-  const ERR_BASECAMP_MISSING: u8 = 5;
-  const ERR_BASECAMP_DEAD: u8 = 6;
-  const EKEY_NOT_FOUND: u8 = 7;
+  const ERR_NOT_INITIALIZED: u64 = 1;
+  const ERR_NOT_ADMIN: u64 = 2;
+  const ERR_MAX_CREW: u64 = 3;
+  const ERR_CREW_NOT_HOME: u64 = 4;
+  const ERR_BASECAMP_MISSING: u64 = 5;
+  const ERR_BASECAMP_DEAD: u64 = 6;
+  const ERR_MOVE_TOO_FAR: u64 = 7;
 
   struct Weather has store, drop, copy {
-    time: u64,
     temp: u8,
     rain: u8,
     wind: u8,
@@ -72,7 +71,7 @@ module basecamp::main {
     live: bool,
     gold: u8,
     weather: Weather,
-    crew: SimpleMap<u8, Crew>,
+    crew: vector<Crew>,
     lat: u8,
     long: u8,
     extend_ref: ExtendRef,
@@ -157,8 +156,6 @@ module basecamp::main {
 
   fun create_basecamp_internal(user: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
 
-    assert!(crew_count <= MAX_CREW>, ERR_BASECAMP_MISSING);
-
     let uri = utf8(BASECAMP_COLLECTION_URI);
     let description = utf8(BASECAMP_COLLECTION_DESCRIPTION);
     let user_address = address_of(user);
@@ -170,19 +167,17 @@ module basecamp::main {
     let gold = randomness::u8_range(minimum_gold, maximum_gold);
 
     // weather,
-    let time = timestamp::now_microseconds();
-    let temp = randomness::u8_range(45, 75);
-    let rain = randomness::u8_range(0, 50);
-    let wind = randomness::u8_range(5, 12);
+    let temp = randomness::u8_range(45, 95);
+    let rain = randomness::u8_range(0, 100);
+    let wind = randomness::u8_range(2, 75);
     let weather = Weather {
-      time: time,
       temp: temp,
       rain: rain,
       wind: wind
     };
 
     // crew,
-    let crew:SimpleMap<u8,Crew> = simple_map::create();
+    let crew = vector::empty<Crew>();
     for (i in 1..(crew_count+1)){
       let strength = randomness::u8_range(1, 5);
       let endurance = randomness::u8_range(1, 10);
@@ -198,7 +193,7 @@ module basecamp::main {
         perception: perception,
         speed: speed,
       };
-      simple_map::add(&mut crew,i,crew_member); 
+      vector::push_back(&mut crew, crew_member);
     };
 
     let collection_address = get_collection_address();
@@ -263,56 +258,114 @@ module basecamp::main {
     assert!(basecamp.long == 1, ERR_CREW_NOT_HOME);
   }
 
-  fun rest_crew(basecamp_address: address) acquires Basecamp{
+  fun rest_crew(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
-    next_weather(basecamp_address);
+    let crew = &mut borrow_global_mut<Basecamp>(basecamp_address).crew;
   }
 
-  fun move_crew(basecamp_address: address, lat: u8, long: u8) acquires Basecamp{
+  fun move_crew(basecamp_address: address, direction: u8) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    if (direction == 1){
+      move_north(basecamp_address);
+    };
+    if (direction == 2){
+      move_east(basecamp_address);
+    };
+    if (direction == 3){
+      move_south(basecamp_address);
+    };
+    if (direction == 4){
+      move_west(basecamp_address);
+    };
+  }
+
+  fun move_north(basecamp_address: address) acquires Basecamp {
     let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
-    let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
-    *lat_ref = *lat_ref + lat;
-    *lat_ref = *lat_ref + long;
+    let new_lat = *lat_ref + 1;
+     assert!(new_lat < 100, ERR_MOVE_TOO_FAR);
+    *lat_ref =new_lat;
   }
 
-  fun next_weather(basecamp_address: address) acquires Basecamp{
+  fun move_south(basecamp_address: address) acquires Basecamp {
+    let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
+    let new_lat = *lat_ref - 1;
+    assert!(new_lat > 0, ERR_MOVE_TOO_FAR);
+    *lat_ref = new_lat;
+  }
+
+  fun move_east(basecamp_address: address) acquires Basecamp {
+    let long_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
+    let new_long = *long_ref + 1;
+    assert!(new_long < 100, ERR_MOVE_TOO_FAR);
+    *long_ref = new_long;
+  }
+
+  fun move_west(basecamp_address: address) acquires Basecamp {
+    let long_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
+    let new_long = *long_ref - 1;
+    assert!(new_long > 0, ERR_MOVE_TOO_FAR);
+    *long_ref = new_long;
+  }
+
+  fun next_weather(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    let previous_weather = &mut borrow_global_mut<Basecamp>(basecamp_address).weather;
+
+    let temp_ref = &mut previous_weather.temp;
+    let new_temp = randomness::u8_range(*temp_ref - 5, *temp_ref + 5);
+    *temp_ref = clamp_value(new_temp, 45, 95);
+    
+    let rain_ref = &mut previous_weather.rain;
+    let new_rain = randomness::u8_range(*rain_ref - 5, *rain_ref + 5);
+    *rain_ref = clamp_value(new_rain, 0, 100);
+
+    let wind_ref = &mut previous_weather.wind;
+    let new_wind = randomness::u8_range(*wind_ref - 5, *wind_ref + 5);
+    *wind_ref = clamp_value(new_wind, 2, 75);
   }
 
   fun explore(basecamp_address: address) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    //let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
+    //let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
   }
 
   fun get_store_items(basecamp_address: address) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
   fun buy(basecamp_address: address) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
   fun sell(basecamp_address: address) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
   fun pack(basecamp_address: address) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
   fun unpack(basecamp_address: address) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    //let basecamp = borrow_global<Basecamp>(basecamp_address);
+  }
+
+  fun clamp_value(n: u8, min: u8, max: u8): u8 {
+    if (n < min) {
+      min
+    } else if (n > max) {
+      max
+    } else {
+      n
+    }
   }
   
 }
