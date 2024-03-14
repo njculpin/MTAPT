@@ -41,6 +41,8 @@ module basecamp::main {
     intelligence: u8,
     perception: u8,
     speed: u8,
+    lat: u8,
+    long: u8
   }
 
   struct Discovery has store, drop, copy {
@@ -193,6 +195,8 @@ module basecamp::main {
         intelligence: intelligence,
         perception: perception,
         speed: speed,
+        lat: 1,
+        long: 1
       };
       table::upsert(&mut crew, counter, crew_member);
       counter = counter + 1
@@ -278,44 +282,92 @@ module basecamp::main {
     crew_member.health = new_health;
   }
 
-  fun move_crew(basecamp_address: address, direction: u8) acquires Basecamp {
+  fun move_crew_member(basecamp_address: address, direction: u8, crew_id: u64) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     if (direction == 1){
-      move_north(basecamp_address);
+      move_crew_member_north(basecamp_address, crew_id);
     };
     if (direction == 2){
-      move_east(basecamp_address);
+      move_crew_member_east(basecamp_address, crew_id);
     };
     if (direction == 3){
-      move_south(basecamp_address);
+      move_crew_member_south(basecamp_address, crew_id);
     };
     if (direction == 4){
-      move_west(basecamp_address);
+      move_crew_member_west(basecamp_address, crew_id);
     };
   }
 
-  fun move_north(basecamp_address: address) acquires Basecamp {
+  fun move_crew_member_north(basecamp_address: address, crew_id: u64) acquires Basecamp {
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let new_lat = crew_member.lat - 1;
+    assert!(new_lat == 0, ERR_MOVE_TOO_FAR);
+    crew_member.lat = new_lat;
+  }
+
+  fun move_crew_member_east(basecamp_address: address, crew_id: u64) acquires Basecamp {
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let new_long = crew_member.long + 1;
+    assert!(new_long > 100, ERR_MOVE_TOO_FAR);
+    crew_member.long = new_long;
+  }
+
+  fun move_crew_member_south(basecamp_address: address, crew_id: u64) acquires Basecamp {
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let new_lat = crew_member.lat + 1;
+    assert!(new_lat > 100, ERR_MOVE_TOO_FAR);
+    crew_member.lat = new_lat;
+  }
+
+  fun move_crew_member_west(basecamp_address: address, crew_id: u64) acquires Basecamp {
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let new_long = crew_member.long - 1;
+    assert!(new_long == 0, ERR_MOVE_TOO_FAR);
+    crew_member.long = new_long;
+  }
+
+  fun move_basecamp(basecamp_address: address, direction: u8) acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    if (direction == 1){
+      move_basecamp_north(basecamp_address);
+    };
+    if (direction == 2){
+      move_basecamp_east(basecamp_address);
+    };
+    if (direction == 3){
+      move_basecamp_south(basecamp_address);
+    };
+    if (direction == 4){
+      move_basecamp_west(basecamp_address);
+    };
+  }
+
+  fun move_basecamp_north(basecamp_address: address) acquires Basecamp {
     let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
-    let new_lat = *lat_ref + 1;
-     assert!(new_lat < 100, ERR_MOVE_TOO_FAR);
+    let new_lat = *lat_ref - 1;
+     assert!(new_lat == 0, ERR_MOVE_TOO_FAR);
     *lat_ref =new_lat;
   }
 
-  fun move_south(basecamp_address: address) acquires Basecamp {
+  fun move_basecamp_south(basecamp_address: address) acquires Basecamp {
     let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
-    let new_lat = *lat_ref - 1;
+    let new_lat = *lat_ref + 1;
     assert!(new_lat > 0, ERR_MOVE_TOO_FAR);
     *lat_ref = new_lat;
   }
 
-  fun move_east(basecamp_address: address) acquires Basecamp {
+  fun move_basecamp_east(basecamp_address: address) acquires Basecamp {
     let long_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
     let new_long = *long_ref + 1;
     assert!(new_long < 100, ERR_MOVE_TOO_FAR);
     *long_ref = new_long;
   }
 
-  fun move_west(basecamp_address: address) acquires Basecamp {
+  fun move_basecamp_west(basecamp_address: address) acquires Basecamp {
     let long_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
     let new_long = *long_ref - 1;
     assert!(new_long > 0, ERR_MOVE_TOO_FAR);
