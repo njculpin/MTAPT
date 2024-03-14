@@ -6,11 +6,10 @@ module basecamp::main {
   use aptos_framework::randomness;
   use aptos_framework::object::ExtendRef;
   use aptos_std::string_utils::{to_string};
+  use aptos_std::table::{Self, Table}; 
   use std::option;
   use std::signer::address_of;
   use std::string::{String, utf8};
-  use std::vector;
-  // use std::simple_map::{Self, SimpleMap};
   use aptos_token_objects::collection;
   use aptos_token_objects::token;
 
@@ -71,7 +70,8 @@ module basecamp::main {
     live: bool,
     gold: u8,
     weather: Weather,
-    crew: vector<Crew>,
+    crew: Table<u64, Crew>,
+    crew_count: u64,
     lat: u8,
     long: u8,
     extend_ref: ExtendRef,
@@ -177,7 +177,8 @@ module basecamp::main {
     };
 
     // crew,
-    let crew = vector::empty<Crew>();
+    let crew = table::new();
+    let counter = 1;
     for (i in 1..(crew_count+1)){
       let strength = randomness::u8_range(1, 5);
       let endurance = randomness::u8_range(1, 10);
@@ -193,7 +194,8 @@ module basecamp::main {
         perception: perception,
         speed: speed,
       };
-      vector::push_back(&mut crew, crew_member);
+      table::upsert(&mut crew, counter, crew_member);
+      counter = counter + 1
     };
 
     let collection_address = get_collection_address();
@@ -220,6 +222,7 @@ module basecamp::main {
         gold: gold,
         weather: weather,
         crew: crew,
+        crew_count: counter,
         lat: 1,
         long: 1,
         extend_ref,
@@ -260,7 +263,19 @@ module basecamp::main {
 
   fun rest_crew(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let crew = &mut borrow_global_mut<Basecamp>(basecamp_address).crew;
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    let crew_count = basecamp.crew_count;
+    for (i in 1..(crew_count+1)){
+      rest_crew_member(basecamp_address, i)
+    };
+  }
+
+  fun rest_crew_member(basecamp_address: address, crew_id: u64) acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let new_health = clamp_value(crew_member.health + 1, 0, 5);
+    crew_member.health = new_health;
   }
 
   fun move_crew(basecamp_address: address, direction: u8) acquires Basecamp {
