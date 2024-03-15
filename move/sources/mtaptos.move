@@ -8,6 +8,7 @@ module basecamp::main {
   use aptos_std::string_utils::{to_string};
   use aptos_std::table::{Self, Table}; 
   use std::option;
+  use std::vector;
   use std::signer::address_of;
   use std::string::{String, utf8};
   use aptos_token_objects::collection;
@@ -54,6 +55,7 @@ module basecamp::main {
     crew_count: u64,
     lat: u64,
     long: u64,
+    world: Table<u64, Position>,
     extend_ref: ExtendRef,
     mutator_ref: token::MutatorRef,
     burn_ref: token::BurnRef,
@@ -80,15 +82,8 @@ module basecamp::main {
 
   struct Position has store, drop, copy {
     discoveries: vector<Discovery>,
-    weather: Weather
-  }
-
-  struct Lats has key {
-    long: SimpleMap<u64, Position>
-  }
-
-  struct WorldMap has key {
-    lat: SimpleMap<u64, Lats>
+    lat: u64,
+    long: u64,
   }
 
   // collection signer
@@ -124,13 +119,6 @@ module basecamp::main {
     });
     
     create_basecamp_collection(app_signer);
-
-    // World Map to store large discoveries
-    // let world:SimpleMap<u64,Position> = simple_map::create(); 
-    // let world_map = WorldMap {
-    //   world: world
-    // };
-    // move_to(app_signer, world_map);
   }
 
   fun get_collection_address(): address {
@@ -164,6 +152,7 @@ module basecamp::main {
 
   fun create_basecamp_internal(user: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
 
+    // meta
     let uri = utf8(BASECAMP_COLLECTION_URI);
     let description = utf8(BASECAMP_COLLECTION_DESCRIPTION);
     let user_address = address_of(user);
@@ -185,8 +174,19 @@ module basecamp::main {
     };
 
     // start location
-    let lat = randomness::u8_range(1, 5);
-    let long = randomness::u8_range(90, 95)
+    let lat = randomness::u64_range(1, 5);
+    let long = randomness::u64_range(90, 95);
+
+    // world 
+    let world = table::new();
+    let discoveries_count = 1;
+    let discoveries = vector::empty<Discovery>();
+    let position = Position {
+      discoveries: discoveries,
+      lat: lat,
+      long: long
+    };
+    table::upsert(&mut world, discoveries_count, position);
 
     // crew,
     let crew = table::new();
@@ -239,6 +239,7 @@ module basecamp::main {
         crew_count: counter,
         lat: lat,
         long: long,
+        world: world,
         extend_ref,
         mutator_ref,
         burn_ref,
@@ -292,7 +293,7 @@ module basecamp::main {
     crew_member.health = new_health;
   }
 
-  fun move_crew_member(basecamp_address: address, direction: u8, distance: u8, crew_id: u64) acquires Basecamp {
+  fun move_crew_member(basecamp_address: address, direction: u8, distance: u64, crew_id: u64) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     if (direction == 1){
       move_crew_member_north(basecamp_address, distance, crew_id);
@@ -308,43 +309,45 @@ module basecamp::main {
     };
   }
 
-  fun move_crew_member_north(basecamp_address: address, distance: u8, crew_id: u64) acquires Basecamp {
+  fun move_crew_member_north(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= distance, ERR_MOVE_TOO_FAR);
+    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
     let new_lat = crew_member.lat - distance;
     assert!(new_lat > 0, ERR_MOVE_TOO_FAR);
     crew_member.lat = new_lat;
   }
 
-  fun move_crew_member_east(basecamp_address: address, distance: u8, crew_id: u64) acquires Basecamp {
+  fun move_crew_member_east(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= distance, ERR_MOVE_TOO_FAR);
-    let new_long = crew_member.long + 1;
+    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
+    let new_long = crew_member.long + distance;
     assert!(new_long < MAP_SIZE, ERR_MOVE_TOO_FAR);
     crew_member.long = new_long;
   }
 
-  fun move_crew_member_south(basecamp_address: address, distance: u8, crew_id: u64) acquires Basecamp {
+  fun move_crew_member_south(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= distance, ERR_MOVE_TOO_FAR);
-    let new_lat = crew_member.lat + 1;
+    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
+    let new_lat = crew_member.lat + distance;
     assert!(new_lat < MAP_SIZE, ERR_MOVE_TOO_FAR);
     crew_member.lat = new_lat;
   }
 
-  fun move_crew_member_west(basecamp_address: address, distance: u8, crew_id: u64) acquires Basecamp {
+  fun move_crew_member_west(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= distance, ERR_MOVE_TOO_FAR);
-    let new_long = crew_member.long - 1;
+    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
+    let new_long = crew_member.long - distance;
     assert!(new_long > 0, ERR_MOVE_TOO_FAR);
     crew_member.long = new_long;
   }
 
   fun move_basecamp(basecamp_address: address, direction: u8) acquires Basecamp {
+    // todo: if any crew members share this location,
+    // move them as well.
     check_basecamp_exist_and_crew_alive(basecamp_address);
     if (direction == 1){
       move_basecamp_north(basecamp_address);
