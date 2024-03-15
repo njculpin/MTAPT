@@ -18,8 +18,19 @@ module basecamp::main {
   const BASECAMP_COLLECTION_NAME: vector<u8> = b"Basecamp Collection";
   const BASECAMP_COLLECTION_DESCRIPTION: vector<u8> = b"Basecamp Collection Description";
   const BASECAMP_COLLECTION_URI: vector<u8> = b"png";
+
   const MAX_CREW: u8 = 10;
   const MAP_SIZE: u64 = 100;
+  const MIN_HEALTH: u8 = 0;
+  const MAX_HEALTH: u8 = 10;
+  const MIN_STRENGTH: u8 = 1;
+  const MAX_STRENGTH: u8 = 5;
+  const MIN_RAIN: u8 = 0;
+  const MAX_RAIN: u8 = 100;
+  const MIN_WIND: u8 = 1;
+  const MAX_WIND: u8 = 120;
+  const MIN_TEMP: u8 = 30;
+  const MAX_TEMP: u8 = 100;
 
   const ERR_NOT_INITIALIZED: u64 = 1;
   const ERR_NOT_ADMIN: u64 = 2;
@@ -33,10 +44,6 @@ module basecamp::main {
     live: bool,
     health: u8,
     strength: u8,
-    endurance: u8,
-    intelligence: u8,
-    perception: u8,
-    speed: u8,
     location: u64,
   }
 
@@ -59,27 +66,16 @@ module basecamp::main {
     burn_ref: token::BurnRef,
   }
 
-  struct Discovery has store, drop, copy {
-    name: vector<u8>,
-    gold_value: u8,
-    damage_radius: u8,
-    improvement_radius: u8,
-    health_damage: u8,
-    health_improvement: u8,
-    strength_damage: u8,
-    strength_improvement: u8,
-    endurance_damage: u8,
-    endurance_improvement: u8,
-    intelligence_damage: u8,
-    intelligence_improvement: u8,
-    perception_damage: u8,
-    perception_improvement: u8,
-    speed_damage: u8,
-    speed_improvement: u8
+  struct Thing has store, drop, copy {
+    consumable: bool,
+    size: u8,
+    live: bool,
+    health: u8,
+    strength: u8
   }
 
   struct Position has store, drop, copy {
-    discoveries: vector<Discovery>,
+    things: vector<Thing>,
   }
 
   // collection signer
@@ -160,9 +156,9 @@ module basecamp::main {
     let gold = randomness::u8_range(minimum_gold, maximum_gold);
 
     // weather,
-    let temp = randomness::u8_range(45, 95);
-    let rain = randomness::u8_range(0, 100);
-    let wind = randomness::u8_range(2, 75);
+    let temp = randomness::u8_range(MIN_TEMP, MAX_TEMP);
+    let rain = randomness::u8_range(MIN_RAIN, MAX_RAIN);
+    let wind = randomness::u8_range(MIN_WIND, MAX_WIND);
     let weather = Weather {
       temp: temp,
       rain: rain,
@@ -175,9 +171,9 @@ module basecamp::main {
 
     // world 
     let world = table::new();
-    let discoveries = vector::empty<Discovery>();
+    let things = vector::empty<Thing>();
     let position = Position {
-      discoveries: discoveries
+      things: things
     };
     table::upsert(&mut world, location, position);
 
@@ -185,19 +181,11 @@ module basecamp::main {
     let crew = table::new();
     let counter = 1;
     for (i in 1..(crew_count+1)){
-      let strength = randomness::u8_range(1, 5);
-      let endurance = randomness::u8_range(1, 10);
-      let intelligence = randomness::u8_range(2, 7);
-      let perception = randomness::u8_range(2, 10);
-      let speed = randomness::u8_range(1, 3);
+      let strength = randomness::u8_range(MIN_STRENGTH, MAX_STRENGTH);
       let crew_member = Crew {
         live: true,
-        health: 5,
+        health: MAX_HEALTH,
         strength: strength,
-        endurance: endurance,
-        intelligence: intelligence,
-        perception: perception,
-        speed: speed,
         location: location,
       };
       table::upsert(&mut crew, counter, crew_member);
@@ -264,10 +252,14 @@ module basecamp::main {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_count = basecamp.crew_count;
+    let crew_home_counter = 0;
     for (i in 1..(crew_count+1)){
       let crew_member = table::borrow_mut(&mut basecamp.crew, i);
-      assert!(crew_member.location == basecamp.location, ERR_CREW_NOT_HOME);
+      if (crew_member.location == basecamp.location){
+        crew_home_counter = crew_home_counter + 1;
+      }
     };
+    assert!(crew_home_counter > 0, ERR_CREW_NOT_HOME);
   }
 
   fun rest_crew(basecamp_address: address) acquires Basecamp {
@@ -277,8 +269,8 @@ module basecamp::main {
     for (i in 1..(crew_count+1)){
       let crew_member = table::borrow_mut(&mut basecamp.crew, i);
       let crew_id = i;
-      let new_health = clamp_value(crew_member.health + 1, 0, 5);
-      let new_strength = clamp_value(crew_member.strength + 1, 0, 5);
+      let new_health = clamp_value(crew_member.health + 1, MIN_HEALTH, MAX_HEALTH);
+      let new_strength = clamp_value(crew_member.strength + 1, MIN_STRENGTH, MAX_STRENGTH);
       crew_member.health = new_health;
       crew_member.strength = new_strength;
     };
@@ -289,9 +281,9 @@ module basecamp::main {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    let new_health = clamp_value(crew_member.health + 1, 0, 5);
+    let new_health = clamp_value(crew_member.health + 1, MIN_HEALTH, MAX_HEALTH);
+    let new_strength = clamp_value(crew_member.strength + 1, MIN_STRENGTH, MAX_STRENGTH);
     crew_member.health = new_health;
-    let new_strength = clamp_value(crew_member.strength + 1, 0, 5);
     crew_member.strength = new_strength;
     next_weather(basecamp_address);
   }
@@ -316,8 +308,8 @@ module basecamp::main {
   fun move_crew_member_north(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
-    let multiple = distance * 100;
+    assert!(distance <= 2, ERR_MOVE_TOO_FAR);
+    let multiple = distance * MAP_SIZE;
     let new_location = crew_member.location - multiple;
     assert!(new_location > 0, ERR_MOVE_TOO_FAR);
     crew_member.location = new_location;
@@ -326,7 +318,7 @@ module basecamp::main {
   fun move_crew_member_east(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
+    assert!(distance <= 2, ERR_MOVE_TOO_FAR);
     let new_location = crew_member.location + distance;
     assert!(new_location < MAP_SIZE, ERR_MOVE_TOO_FAR);
     crew_member.location = new_location;
@@ -335,8 +327,8 @@ module basecamp::main {
   fun move_crew_member_south(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
-    let multiple = distance * 100;
+    assert!(distance <= 2, ERR_MOVE_TOO_FAR);
+    let multiple = distance * MAP_SIZE;
     let new_location = crew_member.location + multiple;
     assert!(new_location < MAP_SIZE, ERR_MOVE_TOO_FAR);
     crew_member.location = new_location;
@@ -345,7 +337,7 @@ module basecamp::main {
   fun move_crew_member_west(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
-    assert!(crew_member.speed <= (distance as u8), ERR_MOVE_TOO_FAR);
+    assert!(distance <= 2, ERR_MOVE_TOO_FAR);
     let new_location = crew_member.location - distance;
     assert!(new_location > 0, ERR_MOVE_TOO_FAR);
     crew_member.location = new_location;
@@ -371,14 +363,14 @@ module basecamp::main {
 
   fun move_basecamp_north(basecamp_address: address) acquires Basecamp {
     let location_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).location;
-    let new_location = *location_ref - 100;
+    let new_location = *location_ref - MAP_SIZE;
      assert!(new_location > 0, ERR_MOVE_TOO_FAR);
     *location_ref = new_location;
   }
 
   fun move_basecamp_south(basecamp_address: address) acquires Basecamp {
     let location_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).location;
-    let new_location = *location_ref + 100;
+    let new_location = *location_ref + MAP_SIZE;
     assert!(new_location < MAP_SIZE, ERR_MOVE_TOO_FAR);
     *location_ref = new_location;
   }
@@ -402,54 +394,101 @@ module basecamp::main {
     let previous_weather = &mut borrow_global_mut<Basecamp>(basecamp_address).weather;
     let temp_ref = &mut previous_weather.temp;
     let new_temp = randomness::u8_range(*temp_ref - 5, *temp_ref + 5);
-    *temp_ref = clamp_value(new_temp, 45, 95);
+    *temp_ref = clamp_value(new_temp, MIN_TEMP, MAX_TEMP);
     let rain_ref = &mut previous_weather.rain;
     let new_rain = randomness::u8_range(*rain_ref - 5, *rain_ref + 5);
-    *rain_ref = clamp_value(new_rain, 0, 100);
+    *rain_ref = clamp_value(new_rain, MIN_RAIN, MAX_RAIN);
     let wind_ref = &mut previous_weather.wind;
     let new_wind = randomness::u8_range(*wind_ref - 5, *wind_ref + 5);
-    *wind_ref = clamp_value(new_wind, 2, 75);
+    *wind_ref = clamp_value(new_wind, MIN_WIND, MAX_WIND);
   }
 
-  fun explore(basecamp_address: address, location: u64) acquires Basecamp{
+  fun explore(basecamp_address: address, location_id: u64) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_count = basecamp.crew_count;
-
-    // get location if visited already
-    // get previous discoveries if left here
-
-    // let discovery = Discover {
-    //   name: vector<u8>,
-    //   gold_value: u8,
-    //   damage_radius: u8,
-    //   improvement_radius: u8,
-    //   health_damage: u8,
-    //   health_improvement: u8,
-    //   strength_damage: u8,
-    //   strength_improvement: u8,
-    //   endurance_damage: u8,
-    //   endurance_improvement: u8,
-    //   intelligence_damage: u8,
-    //   intelligence_improvement: u8,
-    //   perception_damage: u8,
-    //   perception_improvement: u8,
-    //   speed_damage: u8,
-    //   speed_improvement: u8
-    // }
-
+    let world = table::borrow_mut(&mut basecamp.world, location_id);
+    let things = world.things;
     for (i in 1..(crew_count+1)){
       let crew_id = i;
       let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
       let new_strength = clamp_value(crew_member.strength - 1, 0, 5);
       crew_member.strength = new_strength;
-      // if (crew_member.lat == lat){
-      //   if (crew_member.long == long){
-
-      //   }
-      // }
+      if (crew_member.location == location_id){
+          let discovery = construct_thing();
+          vector::push_back(&mut things, discovery);
+      }
     };
     next_weather(basecamp_address);
+    things;
+  }
+
+  fun construct_thing(): Thing {
+    let rarity = randomness::u8_range(1, 100);
+    let live_odds = randomness::u8_range(1, 10);
+    let live = false;
+    let consumable = false;
+    let size = 1;
+    let health = 0;
+    let strength = 0;
+    if (live_odds < 9){
+      live = true;
+      if (rarity == 100) {
+        // wtf.
+        size = randomness::u8_range(10, 20);
+        health = randomness::u8_range(10, size);
+        strength = randomness::u8_range(10, size);
+      } else if (rarity > 90){
+        // bears, moose, etc...
+        size = randomness::u8_range(7, 10);
+        health = randomness::u8_range(5, size);
+        strength = randomness::u8_range(1, size);
+      } else if (rarity > 70){
+        // deer, people, etc...
+        size = randomness::u8_range(3, 7);
+        health = randomness::u8_range(3, size);
+        strength = randomness::u8_range(1, size);
+      } else  if (rarity > 40){
+        // coyote, racoons, etc...
+        size = randomness::u8_range(2, 5);
+        health = randomness::u8_range(1, size);
+        strength = randomness::u8_range(1, size);
+      } else {
+        // rabbits, snakes, etc...
+        size = randomness::u8_range(1, 2);
+        health = randomness::u8_range(1, size);
+        strength = randomness::u8_range(1, size);
+      }
+    } else {
+      let consumable_random = randomness::u8_range(1, 2);
+      if (consumable_random == 2){
+        consumable = true;
+      };
+      if (rarity == 100){
+        // wtf.
+        size = randomness::u8_range(1, 10);
+        health = randomness::u8_range(0, size);
+        strength = randomness::u8_range(0, size);
+      } else if (rarity > 90){
+        // gold deposit, rare plants, etc..
+        size = randomness::u8_range(4, 10);
+        health = randomness::u8_range(1, size);
+        strength = randomness::u8_range(0, size);
+      } else {
+        // berries, mushrooms, poison ivy, etc...
+        size = randomness::u8_range(1, 3);
+        health = randomness::u8_range(1, size);
+        strength = randomness::u8_range(0, size);
+      }
+    };
+    let discovery = Thing {
+      consumable: consumable,
+      live: live,
+      size: size,
+      health: health,
+      strength: strength
+    };
+    discovery
   }
 
   fun get_store_items(basecamp_address: address) acquires Basecamp{
@@ -457,25 +496,34 @@ module basecamp::main {
     //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun buy(basecamp_address: address, store_id: u64) acquires Basecamp{
+  fun buy(basecamp_address: address, thing_id: u64) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun sell(basecamp_address: address, store_id: u64) acquires Basecamp{
+  fun sell(basecamp_address: address, thing_id: u64) acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun pack(basecamp_address: address, crew_id: u64, store_id: u64) acquires Basecamp{
-    crew_at_home(basecamp_address);
+  fun pack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
 
-  fun unpack(basecamp_address: address, crew_id: u64, store_id: u64) acquires Basecamp{
+  fun unpack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    //let basecamp = borrow_global<Basecamp>(basecamp_address);
+  }
+
+  fun attack_and_kill(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    //let basecamp = borrow_global<Basecamp>(basecamp_address);
+  }
+
+  fun consume(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     //let basecamp = borrow_global<Basecamp>(basecamp_address);
   }
