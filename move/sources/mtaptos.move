@@ -271,18 +271,26 @@ module basecamp::main {
 
   fun crew_at_home(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
-    assert!(basecamp.lat == 1, ERR_CREW_NOT_HOME);
-    assert!(basecamp.long == 1, ERR_CREW_NOT_HOME);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_count = basecamp.crew_count;
+    for (i in 1..(crew_count+1)){
+      let crew_member = table::borrow_mut(&mut basecamp.crew, i);
+      assert!(crew_member.lat == basecamp.lat, ERR_CREW_NOT_HOME);
+      assert!(crew_member.long == basecamp.lat, ERR_CREW_NOT_HOME);
+    };
   }
 
   fun rest_crew(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_count = basecamp.crew_count;
     for (i in 1..(crew_count+1)){
-      rest_crew_member(basecamp_address, i)
+      let crew_id = i;
+      let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+      let new_health = clamp_value(crew_member.health + 1, 0, 5);
+      crew_member.health = new_health;
     };
+    next_weather(basecamp_address);
   }
 
   fun rest_crew_member(basecamp_address: address, crew_id: u64) acquires Basecamp {
@@ -291,6 +299,7 @@ module basecamp::main {
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
     let new_health = clamp_value(crew_member.health + 1, 0, 5);
     crew_member.health = new_health;
+    next_weather(basecamp_address);
   }
 
   fun move_crew_member(basecamp_address: address, direction: u8, distance: u64, crew_id: u64) acquires Basecamp {
@@ -307,6 +316,7 @@ module basecamp::main {
     if (direction == 4){
       move_crew_member_west(basecamp_address, distance, crew_id);
     };
+    next_weather(basecamp_address);
   }
 
   fun move_crew_member_north(basecamp_address: address, distance: u64, crew_id: u64) acquires Basecamp {
@@ -346,9 +356,10 @@ module basecamp::main {
   }
 
   fun move_basecamp(basecamp_address: address, direction: u8) acquires Basecamp {
-    // todo: if any crew members share this location,
-    // move them as well.
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    crew_at_home(basecamp_address);
+
+
     if (direction == 1){
       move_basecamp_north(basecamp_address);
     };
@@ -361,6 +372,7 @@ module basecamp::main {
     if (direction == 4){
       move_basecamp_west(basecamp_address);
     };
+    next_weather(basecamp_address);
   }
 
   fun move_basecamp_north(basecamp_address: address) acquires Basecamp {
@@ -412,6 +424,7 @@ module basecamp::main {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     //let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).lat;
     //let lat_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).long;
+    next_weather(basecamp_address);
   }
 
   fun get_store_items(basecamp_address: address) acquires Basecamp{
