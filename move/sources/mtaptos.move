@@ -44,6 +44,8 @@ module basecamp::main {
   const ERR_MOVE_TOO_FAR: u64 = 7;
   const ERR_NOT_ENOUGH_MONEY: u64 = 8;
   const ERR_YOU_CANT_EAT_THIS: u64 = 9;
+  const ERR_CREW_DEAD: u64 = 10;
+  const ERR_THING_DEAD: u64 = 11;
 
   struct Crew has store, drop, copy {
     live: bool,
@@ -271,7 +273,7 @@ module basecamp::main {
   Resting the crew allows them to stay in place and 
   recover their health and strength.
   */
-  fun rest_crew(basecamp_address: address) acquires Basecamp {
+  public entry fun rest_crew(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_count = basecamp.crew_count;
@@ -289,7 +291,7 @@ module basecamp::main {
   Resting a single crew member allows them to stay in place and 
   recover their health and strength.
   */
-  fun rest_crew_member(basecamp_address: address, crew_id: u64) acquires Basecamp {
+  public entry fun rest_crew_member(basecamp_address: address, crew_id: u64) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
@@ -304,7 +306,7 @@ module basecamp::main {
   Moving a single crew member will move them between 1 and 2 spaces
   in one of four directions; North, South, East, or West.
   */
-  fun move_crew_member(basecamp_address: address, direction: u8, distance: u64, crew_id: u64) acquires Basecamp {
+  public entry fun move_crew_member(basecamp_address: address, direction: u8, distance: u64, crew_id: u64) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     if (direction == 1){
       move_crew_member_north(basecamp_address, distance, crew_id);
@@ -363,8 +365,9 @@ module basecamp::main {
   Moving the base camp will move it and any crew members at home
   1 space in one of four directions; North, South, East, or West.
   */
-  fun move_basecamp(basecamp_address: address, direction: u8) acquires Basecamp {
+  public entry fun move_basecamp(basecamp_address: address, direction: u8) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
+    pay_for_move(basecamp_address);
     crew_at_home(basecamp_address);
     if (direction == 1){
       move_basecamp_north(basecamp_address);
@@ -379,6 +382,13 @@ module basecamp::main {
       move_basecamp_west(basecamp_address);
     };
     next_weather(basecamp_address);
+  }
+
+  fun pay_for_move(basecamp_address: address) acquires Basecamp {
+    let gold_ref = &mut borrow_global_mut<Basecamp>(basecamp_address).gold;
+    let new_gold = *gold_ref - 1;
+    assert!(new_gold > 0, ERR_NOT_ENOUGH_MONEY);
+    *gold_ref = new_gold;
   }
 
   fun move_basecamp_north(basecamp_address: address) acquires Basecamp {
@@ -433,7 +443,7 @@ module basecamp::main {
   Exploring must occur in the location of one of your crew members,
   you can find wild life, artifacts, treasure, and danger.
   */
-  fun explore(basecamp_address: address, location_id: u64): vector<Thing> acquires Basecamp{
+  public entry fun explore(basecamp_address: address, location_id: u64): vector<Thing> acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_count = basecamp.crew_count;
@@ -458,7 +468,7 @@ module basecamp::main {
   available to purchase that may improve your rate of discover, survival,
   and much more.
   */
-  fun get_store_items(basecamp_address: address): vector<Thing> acquires Basecamp {
+  public entry fun get_store_items(basecamp_address: address): vector<Thing> acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
     basecamp.store_items
@@ -469,7 +479,7 @@ module basecamp::main {
   available to equip and use by your crew that may improve your rate of discover, 
   survival, and much more.
   */
-  fun get_owned_items(basecamp_address: address): vector<Thing> acquires Basecamp {
+  public entry fun get_owned_items(basecamp_address: address): vector<Thing> acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
     basecamp.owned_items
@@ -478,7 +488,7 @@ module basecamp::main {
   /*
     A supply drop will resupply the store.
   */
-  fun supply_drop(basecamp_address: address): vector<Thing> acquires Basecamp{
+  public entry fun supply_drop(basecamp_address: address): vector<Thing> acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
@@ -495,7 +505,7 @@ module basecamp::main {
   /*
     Purchase a store item.
   */
-  fun buy(basecamp_address: address, thing_id: u64, name: vector<u8>): vector<Thing> acquires Basecamp {
+  public entry fun buy(basecamp_address: address, thing_id: u64, name: vector<u8>): vector<Thing> acquires Basecamp {
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
@@ -520,7 +530,7 @@ module basecamp::main {
   /*
     Sell a Things
   */
-  fun sell(basecamp_address: address, thing_id: u64): u64 acquires Basecamp{
+  public entry fun sell(basecamp_address: address, thing_id: u64): u64 acquires Basecamp{
     crew_at_home(basecamp_address);
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
@@ -533,7 +543,7 @@ module basecamp::main {
   /*
     Equip a crew member with an item from your owned items
   */
-  fun pack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+  public entry fun pack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     if (basecamp.location == location_id){
@@ -586,7 +596,7 @@ module basecamp::main {
   /*
     Unequip a crew member with a purchased or found item.
   */
-  fun unpack(basecamp_address: address, crew_id: u64, thing_id: u64) acquires Basecamp{
+  public entry fun unpack(basecamp_address: address, crew_id: u64, thing_id: u64) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
@@ -621,17 +631,34 @@ module basecamp::main {
   }
 
   /*
-    Attack or defend from a creature
+    fight a creature on this location
   */
-  // fun attack_and_kill(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-  //   check_basecamp_exist_and_crew_alive(basecamp_address);
-  //   let basecamp = borrow_global<Basecamp>(basecamp_address);
-  // }
+  public entry fun fight(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let world = table::borrow_mut(&mut basecamp.world, location_id);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let thing = vector::borrow_mut(&mut world.things, thing_id);
+    assert!(crew_member.live == true, ERR_CREW_DEAD);
+    assert!(thing.live == true, ERR_THING_DEAD);
+    thing.health = thing.health - 1;
+    thing.strength = thing.strength - 1;
+    if (thing.health == 0){
+      thing.live = false;
+      thing.consumable = true;
+    } else {
+      if (thing.strength > 0){
+        let min_damage = clamp_value(thing.strength - 2, 0, thing.strength);
+        let damage_to_crew = randomness::u8_range(min_damage, thing.strength);
+        crew_member.health = crew_member.health - damage_to_crew;
+      }
+    };
+  }
 
   /*
     Are those mushrooms poison? maybe.
   */
-  fun consume(basecamp_address: address, crew_id: u64, thing_id: u64) acquires Basecamp{
+  public entry fun consume(basecamp_address: address, crew_id: u64, thing_id: u64) acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
@@ -686,7 +713,7 @@ module basecamp::main {
     };
     if (item.consumable == true){
       if (rarity > 90){
-        //  etc...
+        //  wtf...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
