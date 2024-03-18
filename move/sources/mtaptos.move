@@ -19,18 +19,21 @@ module basecamp::main {
   const BASECAMP_COLLECTION_DESCRIPTION: vector<u8> = b"Basecamp Collection Description";
   const BASECAMP_COLLECTION_URI: vector<u8> = b"png";
 
-  const MAX_CREW: u8 = 10;
   const MAP_SIZE: u64 = 100;
-  const MIN_HEALTH: u8 = 0;
-  const MAX_HEALTH: u8 = 10;
-  const MIN_STRENGTH: u8 = 1;
-  const MAX_STRENGTH: u8 = 5;
   const MIN_RAIN: u8 = 0;
   const MAX_RAIN: u8 = 100;
   const MIN_WIND: u8 = 1;
   const MAX_WIND: u8 = 120;
   const MIN_TEMP: u8 = 30;
   const MAX_TEMP: u8 = 100;
+
+  const MAX_STORE_ITEMS: u64 = 12;
+
+  const MAX_CREW: u8 = 10;
+  const MIN_HEALTH: u8 = 0;
+  const MAX_HEALTH: u8 = 10;
+  const MIN_STRENGTH: u8 = 1;
+  const MAX_STRENGTH: u8 = 5;
 
   const ERR_NOT_INITIALIZED: u64 = 1;
   const ERR_NOT_ADMIN: u64 = 2;
@@ -39,6 +42,7 @@ module basecamp::main {
   const ERR_BASECAMP_MISSING: u64 = 5;
   const ERR_BASECAMP_DEAD: u64 = 6;
   const ERR_MOVE_TOO_FAR: u64 = 7;
+  const ERR_NOT_ENOUGH_MONEY: u64 = 8;
 
   struct Crew has store, drop, copy {
     live: bool,
@@ -55,11 +59,13 @@ module basecamp::main {
 
   struct Basecamp has key {
     live: bool,
-    gold: u8,
+    gold: u64,
     weather: Weather,
     crew: Table<u64, Crew>,
     crew_count: u64,
     location: u64,
+    store_items: vector<Thing>,
+    owned_items: vector<Thing>,
     world: Table<u64, Position>,
     extend_ref: ExtendRef,
     mutator_ref: token::MutatorRef,
@@ -67,18 +73,20 @@ module basecamp::main {
   }
 
   struct Thing has store, drop, copy {
-    consumable: bool,
-    size: u8,
+    name: vector<u8>,
     live: bool,
+    consumable: bool,
+    uses: u8,
+    size: u8,
     health: u8,
-    strength: u8
+    strength: u8,
+    cost: u64
   }
 
   struct Position has store, drop, copy {
     things: vector<Thing>,
   }
 
-  // collection signer
   struct CollectionCapability has key {
     extend_ref: ExtendRef,
   }
@@ -144,18 +152,11 @@ module basecamp::main {
 
   fun create_basecamp_internal(user: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
 
-    // meta
     let uri = utf8(BASECAMP_COLLECTION_URI);
     let description = utf8(BASECAMP_COLLECTION_DESCRIPTION);
     let user_address = address_of(user);
     let token_name = to_string(&user_address);
-    
-    // gold
-    let minimum_gold = crew_count * 2;
-    let maximum_gold = crew_count * 10;
-    let gold = randomness::u8_range(minimum_gold, maximum_gold);
 
-    // weather,
     let temp = randomness::u8_range(MIN_TEMP, MAX_TEMP);
     let rain = randomness::u8_range(MIN_RAIN, MAX_RAIN);
     let wind = randomness::u8_range(MIN_WIND, MAX_WIND);
@@ -165,11 +166,9 @@ module basecamp::main {
       wind: wind
     };
 
-    // start location
     let max_spaces = MAP_SIZE * MAP_SIZE;
     let location = randomness::u64_range(1, max_spaces);
 
-    // world 
     let world = table::new();
     let things = vector::empty<Thing>();
     let position = Position {
@@ -177,19 +176,19 @@ module basecamp::main {
     };
     table::upsert(&mut world, location, position);
 
-    // crew,
+    let store_items = vector::empty<Thing>();
+    let owned_items = vector::empty<Thing>();
+    for (i in 1..(MAX_STORE_ITEMS+1)){
+      let item = construct_store_item();
+      vector::push_back(&mut store_items, item);
+    };
+
     let crew = table::new();
-    let counter = 1;
+    let counter = 0;
     for (i in 1..(crew_count+1)){
-      let strength = randomness::u8_range(MIN_STRENGTH, MAX_STRENGTH);
-      let crew_member = Crew {
-        live: true,
-        health: MAX_HEALTH,
-        strength: strength,
-        location: location,
-      };
+      let crew_member = construct_crew_member(location);
       table::upsert(&mut crew, counter, crew_member);
-      counter = counter + 1
+      counter = counter + 1;
     };
 
     let collection_address = get_collection_address();
@@ -210,14 +209,15 @@ module basecamp::main {
     let burn_ref = token::generate_burn_ref(constructor_ref);
     let transfer_ref = object::generate_transfer_ref(constructor_ref);
 
-    // Initialize and set default Basecamp struct values
     let basecamp = Basecamp {
         live: true,
-        gold: gold,
+        gold: counter,
         weather: weather,
         crew: crew,
         crew_count: counter,
         location: location,
+        store_items: store_items,
+        owned_items: owned_items,
         world: world,
         extend_ref,
         mutator_ref,
@@ -225,7 +225,6 @@ module basecamp::main {
     };
     move_to(token_signer_ref, basecamp);
 
-    // Emit event for minting Basecamp token
     event::emit_event<MintBasecampEvent>(
         &mut borrow_global_mut<MintBasecampEvents>(@basecamp).mint_basecamp_events,
         MintBasecampEvent {
@@ -234,13 +233,14 @@ module basecamp::main {
         },
     );
 
-    // Transfer the Basecamp to the user
     object::transfer_with_ref(object::generate_linear_transfer_ref(&transfer_ref), address_of(user));
 
     basecamp_address
   }
 
-  // CONTROLS
+  /*
+  Is the crew alive and does the basecamp exist?
+  */
   fun check_basecamp_exist_and_crew_alive(basecamp_address: address) acquires Basecamp {
     let basecamp_exists = exists<Basecamp>(basecamp_address);
     assert!(basecamp_exists, ERR_BASECAMP_MISSING);
@@ -248,6 +248,9 @@ module basecamp::main {
     assert!(basecamp.live, ERR_BASECAMP_DEAD);
   }
 
+  /*
+  Do we have any crew at home?
+  */
   fun crew_at_home(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
@@ -262,13 +265,16 @@ module basecamp::main {
     assert!(crew_home_counter > 0, ERR_CREW_NOT_HOME);
   }
 
+  /*
+  Resting the crew allows them to stay in place and 
+  recover their health and strength.
+  */
   fun rest_crew(basecamp_address: address) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_count = basecamp.crew_count;
     for (i in 1..(crew_count+1)){
       let crew_member = table::borrow_mut(&mut basecamp.crew, i);
-      let crew_id = i;
       let new_health = clamp_value(crew_member.health + 1, MIN_HEALTH, MAX_HEALTH);
       let new_strength = clamp_value(crew_member.strength + 1, MIN_STRENGTH, MAX_STRENGTH);
       crew_member.health = new_health;
@@ -277,6 +283,10 @@ module basecamp::main {
     next_weather(basecamp_address);
   }
 
+  /*
+  Resting a single crew member allows them to stay in place and 
+  recover their health and strength.
+  */
   fun rest_crew_member(basecamp_address: address, crew_id: u64) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
@@ -288,6 +298,10 @@ module basecamp::main {
     next_weather(basecamp_address);
   }
 
+  /*
+  Moving a single crew member will move them between 1 and 2 spaces
+  in one of four directions; North, South, East, or West.
+  */
   fun move_crew_member(basecamp_address: address, direction: u8, distance: u64, crew_id: u64) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     if (direction == 1){
@@ -343,6 +357,10 @@ module basecamp::main {
     crew_member.location = new_location;
   }
 
+  /*
+  Moving the base camp will move it and any crew members at home
+  1 space in one of four directions; North, South, East, or West.
+  */
   fun move_basecamp(basecamp_address: address, direction: u8) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     crew_at_home(basecamp_address);
@@ -389,21 +407,31 @@ module basecamp::main {
     *location_ref = new_location;
   }
 
-  fun next_weather(basecamp_address: address) acquires Basecamp {
+  /*
+  Many actions will trigger an new weather event. The
+  weather event change is within a range of the previously
+  rendered event.
+  */
+  fun next_weather(basecamp_address: address): Weather acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let previous_weather = &mut borrow_global_mut<Basecamp>(basecamp_address).weather;
-    let temp_ref = &mut previous_weather.temp;
+    let weather = &mut borrow_global_mut<Basecamp>(basecamp_address).weather;
+    let temp_ref = &mut weather.temp;
     let new_temp = randomness::u8_range(*temp_ref - 5, *temp_ref + 5);
     *temp_ref = clamp_value(new_temp, MIN_TEMP, MAX_TEMP);
-    let rain_ref = &mut previous_weather.rain;
+    let rain_ref = &mut weather.rain;
     let new_rain = randomness::u8_range(*rain_ref - 5, *rain_ref + 5);
     *rain_ref = clamp_value(new_rain, MIN_RAIN, MAX_RAIN);
-    let wind_ref = &mut previous_weather.wind;
+    let wind_ref = &mut weather.wind;
     let new_wind = randomness::u8_range(*wind_ref - 5, *wind_ref + 5);
     *wind_ref = clamp_value(new_wind, MIN_WIND, MAX_WIND);
+    borrow_global<Basecamp>(basecamp_address).weather
   }
 
-  fun explore(basecamp_address: address, location_id: u64) acquires Basecamp{
+  /*
+  Exploring must occur in the location of one of your crew members,
+  you can find wild life, artifacts, treasure, and danger.
+  */
+  fun explore(basecamp_address: address, location_id: u64): vector<Thing> acquires Basecamp{
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     let crew_count = basecamp.crew_count;
@@ -420,112 +448,315 @@ module basecamp::main {
       }
     };
     next_weather(basecamp_address);
-    things;
+    things
+  }
+
+  /*
+  Store items is a list of all available tools and equipment thats
+  available to purchase that may improve your rate of discover, survival,
+  and much more.
+  */
+  fun get_store_items(basecamp_address: address): vector<Thing> acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.store_items
+  }
+
+  /*
+  Purchased items is a list of all available tools and equipment thats
+  available to equip and use by your crew that may improve your rate of discover, 
+  survival, and much more.
+  */
+  fun get_owned_items(basecamp_address: address): vector<Thing> acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.owned_items
+  }
+
+  /*
+    A supply drop will resupply the store.
+  */
+  fun supply_drop(basecamp_address: address): vector<Thing> acquires Basecamp{
+    crew_at_home(basecamp_address);
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let store_items = basecamp.store_items;
+    let store_items_length = vector::length(&store_items);
+    let fill = MAX_STORE_ITEMS - store_items_length;
+    for (i in 1..(fill+1)){
+      let item = construct_store_item();
+      vector::push_back(&mut store_items, item);
+    };
+    store_items
+  }
+
+  /*
+    Purchase a store item.
+  */
+  fun buy(basecamp_address: address, thing_id: u64, name: vector<u8>): vector<Thing> acquires Basecamp {
+    crew_at_home(basecamp_address);
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let item = vector::borrow(&basecamp.store_items, thing_id);
+    assert!(basecamp.gold > item.cost, ERR_NOT_ENOUGH_MONEY);
+    basecamp.gold = basecamp.gold - item.cost;
+    let thing = Thing {
+      name: name,
+      live: item.live,
+      consumable: item.consumable,
+      uses: item.uses,
+      size: item.size,
+      health: item.health,
+      strength: item.strength,
+      cost: item.cost
+    };
+    vector::push_back<Thing>(&mut basecamp.owned_items, thing);
+    vector::remove(&mut basecamp.store_items, thing_id);
+    basecamp.owned_items
+  }
+
+  /*
+    Sell a Things
+  */
+  fun sell(basecamp_address: address, thing_id: u64): u64 acquires Basecamp{
+    crew_at_home(basecamp_address);
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let item = vector::borrow(&basecamp.owned_items, thing_id);
+    basecamp.gold = basecamp.gold + item.cost;
+    vector::remove(&mut basecamp.owned_items, thing_id);
+    basecamp.gold
+  }
+
+  /*
+    Equip a crew member with a purchased or found item.
+  */
+  // fun pack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+  //   check_basecamp_exist_and_crew_alive(basecamp_address);
+  //   let basecamp = borrow_global<Basecamp>(basecamp_address);
+  // }
+
+  /*
+    Unequip a crew member with a purchased or found item.
+  */
+  // fun unpack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+  //   check_basecamp_exist_and_crew_alive(basecamp_address);
+  //   let basecamp = borrow_global<Basecamp>(basecamp_address);
+  // }
+
+  /*
+    Attack or defend from a creature
+  */
+  // fun attack_and_kill(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+  //   check_basecamp_exist_and_crew_alive(basecamp_address);
+  //   let basecamp = borrow_global<Basecamp>(basecamp_address);
+  // }
+
+  /*
+    Eat something
+  */
+  // fun consume(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+  //   check_basecamp_exist_and_crew_alive(basecamp_address);
+  //   // let basecamp = borrow_global<Basecamp>(basecamp_address);
+  //   // let owned_items = basecamp.owned_items;
+  //   // let item = table::borrow_mut(&mut owned_items, thing_id);
+  // }
+
+  /*
+    Constructors
+  */
+  fun construct_crew_member(location: u64): Crew{
+    let strength = randomness::u8_range(MIN_STRENGTH, MAX_STRENGTH);
+    let crew_member = Crew {
+      live: true,
+      health: MAX_HEALTH,
+      strength: strength,
+      location: location,
+    };
+    crew_member
+  }
+
+  fun construct_store_item(): Thing {
+    let rarity = randomness::u8_range(1, 100);
+    let consumable_random = randomness::u8_range(1, 4);
+    let item = Thing {
+      name: b"...",
+      live: false,
+      consumable: false,
+      uses: 0,
+      size: 0,
+      health: 0,
+      strength: 0,
+      cost: 0
+    };
+    if (consumable_random == 1){
+      item.consumable = true;
+    };
+    if (item.consumable == true){
+      if (rarity > 90){
+        //  etc...
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 10);
+        item.health = randomness::u8_range(0, 10);
+        item.strength = randomness::u8_range(0, 10);
+      } else {
+        // first aid, energy etc...
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 10);
+        item.health = randomness::u8_range(0, 10);
+        item.strength = randomness::u8_range(0, 10);
+      };
+    } else {
+      if (rarity == 100) {
+        // wtf.
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 10);
+        item.health = randomness::u8_range(0, 10);
+        item.strength = randomness::u8_range(0, 10);
+      } else if (rarity > 90){
+        // projectile weapons etc...
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 10);
+        item.health = randomness::u8_range(0, 10);
+        item.strength = randomness::u8_range(0, 10);
+      } else if (rarity > 80){
+        // cooking tools etc...
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 10);
+        item.health = randomness::u8_range(0, 10);
+        item.strength = randomness::u8_range(0, 10);
+      } else  if (rarity > 70){
+        // tents, clothing etc...
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 10);
+        item.health = randomness::u8_range(0, 10);
+        item.strength = randomness::u8_range(0, 10);
+      } else {
+        // sleeping, storage etc...
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 10);
+        item.health = randomness::u8_range(0, 10);
+        item.strength = randomness::u8_range(0, 10);
+      };
+    };
+    
+    item
   }
 
   fun construct_thing(): Thing {
     let rarity = randomness::u8_range(1, 100);
     let live_odds = randomness::u8_range(1, 10);
-    let live = false;
-    let consumable = false;
-    let size = 1;
-    let health = 0;
-    let strength = 0;
+
+    let item = Thing {
+      name: b"...",
+      live: false,
+      consumable: false,
+      uses: 0,
+      size: 0,
+      health: 0,
+      strength: 0,
+      cost: 0
+    };
+
     if (live_odds < 9){
-      live = true;
+      item.live = true;
       if (rarity == 100) {
         // wtf.
-        size = randomness::u8_range(10, 20);
-        health = randomness::u8_range(10, size);
-        strength = randomness::u8_range(10, size);
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(10, 20);
+        item.health = randomness::u8_range(10, item.size);
+        item.strength = randomness::u8_range(10, item.size);
       } else if (rarity > 90){
         // bears, moose, etc...
-        size = randomness::u8_range(7, 10);
-        health = randomness::u8_range(5, size);
-        strength = randomness::u8_range(1, size);
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(7, 10);
+        item.health = randomness::u8_range(5, item.size);
+        item.strength = randomness::u8_range(1, item.size);
       } else if (rarity > 70){
         // deer, people, etc...
-        size = randomness::u8_range(3, 7);
-        health = randomness::u8_range(3, size);
-        strength = randomness::u8_range(1, size);
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(3, 7);
+        item.health = randomness::u8_range(3, item.size);
+        item.strength = randomness::u8_range(1, item.size);
       } else  if (rarity > 40){
         // coyote, racoons, etc...
-        size = randomness::u8_range(2, 5);
-        health = randomness::u8_range(1, size);
-        strength = randomness::u8_range(1, size);
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(2, 5);
+        item.health = randomness::u8_range(1, item.size);
+        item.strength = randomness::u8_range(1, item.size);
       } else {
         // rabbits, snakes, etc...
-        size = randomness::u8_range(1, 2);
-        health = randomness::u8_range(1, size);
-        strength = randomness::u8_range(1, size);
+        item.uses = randomness::u8_range(1, 10);
+        item.cost = randomness::u64_range(1, 10);
+        item.size = randomness::u8_range(1, 2);
+        item.health = randomness::u8_range(1, item.size);
+        item.strength = randomness::u8_range(1, item.size);
       }
     } else {
       let consumable_random = randomness::u8_range(1, 2);
       if (consumable_random == 2){
-        consumable = true;
+        item.consumable = true;
       };
-      if (rarity == 100){
-        // wtf.
-        size = randomness::u8_range(1, 10);
-        health = randomness::u8_range(0, size);
-        strength = randomness::u8_range(0, size);
-      } else if (rarity > 90){
-        // gold deposit, rare plants, etc..
-        size = randomness::u8_range(4, 10);
-        health = randomness::u8_range(1, size);
-        strength = randomness::u8_range(0, size);
+      if (item.consumable == true){
+        if (rarity == 100){
+          // wtf.
+          item.uses = randomness::u8_range(1, 10);
+          item.cost = randomness::u64_range(1, 10);
+          item.size = randomness::u8_range(1, 10);
+          item.health = randomness::u8_range(0, item.size);
+          item.strength = randomness::u8_range(0, item.size);
+        } else if (rarity > 90){
+          // rare plants, etc..
+          item.uses = randomness::u8_range(1, 10);
+          item.cost = randomness::u64_range(1, 10);
+          item.size = randomness::u8_range(4, 10);
+          item.health = randomness::u8_range(1, item.size);
+          item.strength = randomness::u8_range(0, item.size);
+        } else {
+          // berries, mushrooms, tc...
+          item.uses = randomness::u8_range(1, 10);
+          item.cost = randomness::u64_range(1, 10);
+          item.size = randomness::u8_range(1, 3);
+          item.health = randomness::u8_range(1, item.size);
+          item.strength = randomness::u8_range(0, item.size);
+        }
       } else {
-        // berries, mushrooms, poison ivy, etc...
-        size = randomness::u8_range(1, 3);
-        health = randomness::u8_range(1, size);
-        strength = randomness::u8_range(0, size);
+        if (rarity == 100){
+          // wtf.
+          item.uses = randomness::u8_range(1, 10);
+          item.cost = randomness::u64_range(1, 10);
+          item.size = randomness::u8_range(1, 10);
+          item.health = randomness::u8_range(0, item.size);
+          item.strength = randomness::u8_range(0, item.size);
+        } else if (rarity > 90){
+          // gold deposit, etc..
+          item.uses = randomness::u8_range(1, 10);
+          item.cost = randomness::u64_range(1, 10);
+          item.size = randomness::u8_range(4, 10);
+          item.health = randomness::u8_range(1, item.size);
+          item.strength = randomness::u8_range(0, item.size);
+        } else {
+          // poison ivy, etc...
+          item.uses = randomness::u8_range(1, 10);
+          item.cost = randomness::u64_range(1, 10);
+          item.size = randomness::u8_range(1, 3);
+          item.health = randomness::u8_range(1, item.size);
+          item.strength = randomness::u8_range(0, item.size);
+        }
       }
     };
-    let discovery = Thing {
-      consumable: consumable,
-      live: live,
-      size: size,
-      health: health,
-      strength: strength
-    };
-    discovery
-  }
-
-  fun get_store_items(basecamp_address: address) acquires Basecamp{
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    //let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun buy(basecamp_address: address, thing_id: u64) acquires Basecamp{
-    crew_at_home(basecamp_address);
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    //let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun sell(basecamp_address: address, thing_id: u64) acquires Basecamp{
-    crew_at_home(basecamp_address);
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    //let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun pack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    //let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun unpack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    //let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun attack_and_kill(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    //let basecamp = borrow_global<Basecamp>(basecamp_address);
-  }
-
-  fun consume(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-    check_basecamp_exist_and_crew_alive(basecamp_address);
-    //let basecamp = borrow_global<Basecamp>(basecamp_address);
+    item
   }
 
   fun clamp_value(n: u8, min: u8, max: u8): u8 {
@@ -537,5 +768,10 @@ module basecamp::main {
       n
     }
   }
+
+  // ==== TESTS ====
+  // Setup testing environment
+  #[test_only]
+  use aptos_framework::account::create_account_for_test;
   
 }
