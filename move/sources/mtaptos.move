@@ -43,6 +43,7 @@ module basecamp::main {
   const ERR_BASECAMP_DEAD: u64 = 6;
   const ERR_MOVE_TOO_FAR: u64 = 7;
   const ERR_NOT_ENOUGH_MONEY: u64 = 8;
+  const ERR_YOU_CANT_EAT_THIS: u64 = 9;
 
   struct Crew has store, drop, copy {
     live: bool,
@@ -628,14 +629,29 @@ module basecamp::main {
   // }
 
   /*
-    Eat something
+    Are those mushrooms poison? maybe.
   */
-  // fun consume(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-  //   check_basecamp_exist_and_crew_alive(basecamp_address);
-  //   // let basecamp = borrow_global<Basecamp>(basecamp_address);
-  //   // let owned_items = basecamp.owned_items;
-  //   // let item = table::borrow_mut(&mut owned_items, thing_id);
-  // }
+  fun consume(basecamp_address: address, crew_id: u64, thing_id: u64) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let thing = vector::borrow(&crew_member.backpack, thing_id);
+    assert!(thing.consumable == true, ERR_YOU_CANT_EAT_THIS);
+    if (thing.strength == 0){
+      crew_member.health = crew_member.health + thing.health;
+      crew_member.strength = crew_member.strength + 1;
+    } else {
+      let poison = randomness::u8_range(0, 100);
+      if (poison < 100){
+        crew_member.health = crew_member.health + thing.health;
+        crew_member.strength = crew_member.strength + 1;
+      } else {
+        // FOOD POISONING
+        crew_member.health = crew_member.health - 1; 
+        crew_member.strength = crew_member.strength - 1;
+      }
+    }
+  }
 
   /*
     Constructors
