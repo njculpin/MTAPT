@@ -49,6 +49,7 @@ module basecamp::main {
     health: u8,
     strength: u8,
     location: u64,
+    backpack: vector<Thing>
   }
 
   struct Weather has store, drop, copy {
@@ -529,20 +530,94 @@ module basecamp::main {
   }
 
   /*
-    Equip a crew member with a purchased or found item.
+    Equip a crew member with an item from your owned items
   */
-  // fun pack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-  //   check_basecamp_exist_and_crew_alive(basecamp_address);
-  //   let basecamp = borrow_global<Basecamp>(basecamp_address);
-  // }
+  fun pack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    if (basecamp.location == location_id){
+      let thing = vector::borrow(&basecamp.owned_items, thing_id);
+      let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+      let backpack = crew_member.backpack;
+      let item = Thing {
+        name: thing.name,
+        live: thing.live,
+        consumable: thing.consumable,
+        uses: thing.uses,
+        size: thing.size,
+        health: thing.health,
+        strength: thing.strength,
+        cost: thing.cost
+      };
+      vector::push_back<Thing>(&mut backpack, item);
+      vector::remove(&mut basecamp.owned_items, thing_id);
+    } else {
+      let world = table::borrow_mut(&mut basecamp.world, location_id);
+      let thing = vector::borrow(&world.things, thing_id);
+      let crew_count = basecamp.crew_count;
+      let collected = false;
+      for (i in 1..(crew_count+1)){
+        let crew_member = table::borrow_mut(&mut basecamp.crew, i);
+        let backpack = crew_member.backpack;
+        if (crew_member.location != basecamp.location) {
+          continue
+        };
+        if (collected == true){
+          continue
+        };
+        let item = Thing {
+          name: thing.name,
+          live: thing.live,
+          consumable: thing.consumable,
+          uses: thing.uses,
+          size: thing.size,
+          health: thing.health,
+          strength: thing.strength,
+          cost: thing.cost
+        };
+        vector::push_back<Thing>(&mut backpack, item);
+        collected = true;
+      };
+      vector::remove(&mut world.things, thing_id);
+    }
+  }
 
   /*
     Unequip a crew member with a purchased or found item.
   */
-  // fun unpack(basecamp_address: address, crew_id: u64, thing_id: u64, location_id: u64) acquires Basecamp{
-  //   check_basecamp_exist_and_crew_alive(basecamp_address);
-  //   let basecamp = borrow_global<Basecamp>(basecamp_address);
-  // }
+  fun unpack(basecamp_address: address, crew_id: u64, thing_id: u64) acquires Basecamp{
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
+    let crew_member = table::borrow_mut(&mut basecamp.crew, crew_id);
+    let thing = vector::borrow(&crew_member.backpack, thing_id);
+    if (crew_member.location == basecamp.location){
+      let item = Thing {
+        name: thing.name,
+        live: thing.live,
+        consumable: thing.consumable,
+        uses: thing.uses,
+        size: thing.size,
+        health: thing.health,
+        strength: thing.strength,
+        cost: thing.cost
+      };
+      vector::push_back<Thing>(&mut basecamp.owned_items, item); 
+    } else {
+      let world = table::borrow_mut(&mut basecamp.world, basecamp.location);
+      let item = Thing {
+        name: thing.name,
+        live: thing.live,
+        consumable: thing.consumable,
+        uses: thing.uses,
+        size: thing.size,
+        health: thing.health,
+        strength: thing.strength,
+        cost: thing.cost
+      };
+      vector::push_back<Thing>(&mut world.things, item); 
+    };
+    vector::remove(&mut crew_member.backpack, thing_id);
+  }
 
   /*
     Attack or defend from a creature
@@ -565,13 +640,14 @@ module basecamp::main {
   /*
     Constructors
   */
-  fun construct_crew_member(location: u64): Crew{
+  fun construct_crew_member(location: u64): Crew {
     let strength = randomness::u8_range(MIN_STRENGTH, MAX_STRENGTH);
     let crew_member = Crew {
       live: true,
       health: MAX_HEALTH,
       strength: strength,
       location: location,
+      backpack: vector::empty<Thing>()
     };
     crew_member
   }
