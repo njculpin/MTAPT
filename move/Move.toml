@@ -1,6 +1,7 @@
 [package]
 name = "basecamp"
 version = "1.0.0"
+upgrade_policy = "compatible"
 authors = ['Nick Culpin - https://github.com/njculpin']
 
 [addresses]

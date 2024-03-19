@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "aptos:compile": "cd move && aptos move compile",
+    "aptos:test": "cd move && aptos move test --named-addresses basecamp=default",
     "aptos:run:my_script": "cd move && aptos move run-script --sources/my_script.move"
   },
   "dependencies": {
