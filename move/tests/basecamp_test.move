@@ -68,9 +68,13 @@ module basecamp::basecamp_test {
         debug::print(&string::utf8(b"weather: "));
         debug::print(&weather);
 
-        let crew = basecamp::get_basecamp_crew(basecamp_address);
+        let (live,health,strength,location,backpack) = basecamp::get_basecamp_crew_member(basecamp_address, 0);
         debug::print(&string::utf8(b"crew: "));
-        debug::print(&crew);
+        debug::print(&live);
+        debug::print(&health);
+        debug::print(&strength);
+        debug::print(&location);
+        debug::print(&backpack);
 
         let gold = basecamp::get_basecamp_gold_count(basecamp_address);
         debug::print(&string::utf8(b"gold: "));
@@ -80,7 +84,7 @@ module basecamp::basecamp_test {
         debug::print(&string::utf8(b"live: "));
         debug::print(&live);
 
-        let world = basecamp::get_world_map(basecamp_address);
+        let world = basecamp::get_world_map_location(basecamp_address, location);
         debug::print(&string::utf8(b"world: "));
         debug::print(&world);
     }

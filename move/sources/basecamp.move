@@ -887,12 +887,24 @@ module basecamp::basecamp {
   }
 
   #[view]
-  public fun get_basecamp_crew(
-    basecamp_address: address
-    ): Table<u64, Crew> acquires Basecamp {
+  public fun get_basecamp_crew_member(
+    basecamp_address: address,
+    crew_id: u64
+    ): (
+      bool,
+      u8,
+      u8,
+      u64,
+      vector<Thing>
+      ) acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
-    basecamp.crew
+    let crew_member = table::borrow(&basecamp.crew, crew_id);
+    (crew_member.live, 
+    crew_member.health, 
+    crew_member.strength, 
+    crew_member.location,
+    crew_member.backpack)
   }
 
   #[view]
@@ -909,7 +921,7 @@ module basecamp::basecamp {
     basecamp_address: address
   ): u64 acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
-    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    let basecamp = borrow_global_mut<Basecamp>(basecamp_address);
     basecamp.location
   }
 
@@ -932,12 +944,14 @@ module basecamp::basecamp {
   }
 
   #[view]
-  public fun get_world_map(
-    basecamp_address: address
-    ): Table<u64, Position> acquires Basecamp {
+  public fun get_world_map_location(
+    basecamp_address: address,
+    location_id: u64
+    ): vector<Thing> acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
-    basecamp.world
+    let location = table::borrow(&basecamp.world, location_id);
+    location.things
   }
   
   /*
