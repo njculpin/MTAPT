@@ -106,6 +106,11 @@ module basecamp::basecamp {
     token_name: String,
   }
 
+  /*
+  ================================
+    I N I T I A L I Z E
+  ================================
+  */
   fun init_module(deployer: &signer) {
     let constructor_ref = object::create_named_object(
         deployer,
@@ -147,12 +152,16 @@ module basecamp::basecamp {
     );
   }
 
+  /*
+  ================================
+    M I N T
+  ================================
+  */
   entry fun create_basecamp(user: &signer, crew_count: u8) acquires CollectionCapability, MintBasecampEvents {
     create_basecamp_internal(user, crew_count);
   }
 
   fun create_basecamp_internal(user: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
-
     let uri = utf8(BASECAMP_COLLECTION_URI);
     let description = utf8(BASECAMP_COLLECTION_DESCRIPTION);
     let user_address = address_of(user);
@@ -239,6 +248,11 @@ module basecamp::basecamp {
     basecamp_address
   }
 
+  /*
+  ================================
+    E N T R Y
+  ================================
+  */
   fun check_basecamp_exist_and_crew_alive(basecamp_address: address) acquires Basecamp {
     let basecamp_exists = exists<Basecamp>(basecamp_address);
     assert!(basecamp_exists, ERR_BASECAMP_MISSING);
@@ -653,6 +667,11 @@ module basecamp::basecamp {
     };
   }
 
+  /*
+  ================================
+    A S S E T S
+  ================================
+  */
   fun construct_crew_member(location: u64): Crew {
     let strength = randomness::u8_range(MIN_STRENGTH, MAX_STRENGTH);
     let crew_member = Crew {
@@ -683,14 +702,12 @@ module basecamp::basecamp {
     };
     if (item.consumable == true){
       if (rarity > 90){
-        //  wtf...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
         item.health = randomness::u8_range(0, 10);
         item.strength = randomness::u8_range(0, 10);
       } else {
-        // first aid, energy etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
@@ -699,35 +716,30 @@ module basecamp::basecamp {
       };
     } else {
       if (rarity == 100) {
-        // wtf.
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
         item.health = randomness::u8_range(0, 10);
         item.strength = randomness::u8_range(0, 10);
       } else if (rarity > 90){
-        // projectile weapons etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
         item.health = randomness::u8_range(0, 10);
         item.strength = randomness::u8_range(0, 10);
       } else if (rarity > 80){
-        // cooking tools etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
         item.health = randomness::u8_range(0, 10);
         item.strength = randomness::u8_range(0, 10);
       } else  if (rarity > 70){
-        // tents, clothing etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
         item.health = randomness::u8_range(0, 10);
         item.strength = randomness::u8_range(0, 10);
       } else {
-        // sleeping, storage etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 10);
@@ -757,35 +769,30 @@ module basecamp::basecamp {
     if (live_odds < 9){
       item.live = true;
       if (rarity == 100) {
-        // wtf.
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(10, 20);
         item.health = randomness::u8_range(10, item.size);
         item.strength = randomness::u8_range(10, item.size);
       } else if (rarity > 90){
-        // bears, moose, etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(7, 10);
         item.health = randomness::u8_range(5, item.size);
         item.strength = randomness::u8_range(1, item.size);
       } else if (rarity > 70){
-        // deer, people, etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(3, 7);
         item.health = randomness::u8_range(3, item.size);
         item.strength = randomness::u8_range(1, item.size);
       } else  if (rarity > 40){
-        // coyote, racoons, etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(2, 5);
         item.health = randomness::u8_range(1, item.size);
         item.strength = randomness::u8_range(1, item.size);
       } else {
-        // rabbits, snakes, etc...
         item.uses = randomness::u8_range(1, 10);
         item.cost = randomness::u64_range(1, 10);
         item.size = randomness::u8_range(1, 2);
@@ -799,21 +806,18 @@ module basecamp::basecamp {
       };
       if (item.consumable == true){
         if (rarity == 100){
-          // wtf.
           item.uses = randomness::u8_range(1, 10);
           item.cost = randomness::u64_range(1, 10);
           item.size = randomness::u8_range(1, 10);
           item.health = randomness::u8_range(0, item.size);
           item.strength = randomness::u8_range(0, item.size);
         } else if (rarity > 90){
-          // rare plants, etc..
           item.uses = randomness::u8_range(1, 10);
           item.cost = randomness::u64_range(1, 10);
           item.size = randomness::u8_range(4, 10);
           item.health = randomness::u8_range(1, item.size);
           item.strength = randomness::u8_range(0, item.size);
         } else {
-          // berries, mushrooms, tc...
           item.uses = randomness::u8_range(1, 10);
           item.cost = randomness::u64_range(1, 10);
           item.size = randomness::u8_range(1, 3);
@@ -822,21 +826,18 @@ module basecamp::basecamp {
         }
       } else {
         if (rarity == 100){
-          // wtf.
           item.uses = randomness::u8_range(1, 10);
           item.cost = randomness::u64_range(1, 10);
           item.size = randomness::u8_range(1, 10);
           item.health = randomness::u8_range(0, item.size);
           item.strength = randomness::u8_range(0, item.size);
         } else if (rarity > 90){
-          // gold deposit, etc..
           item.uses = randomness::u8_range(1, 10);
           item.cost = randomness::u64_range(1, 10);
           item.size = randomness::u8_range(4, 10);
           item.health = randomness::u8_range(1, item.size);
           item.strength = randomness::u8_range(0, item.size);
         } else {
-          // poison ivy, etc...
           item.uses = randomness::u8_range(1, 10);
           item.cost = randomness::u64_range(1, 10);
           item.size = randomness::u8_range(1, 3);
@@ -848,6 +849,11 @@ module basecamp::basecamp {
     item
   }
 
+  /*
+  ================================
+    U T I L I T Y
+  ================================
+  */
   fun clamp_value(n: u8, min: u8, max: u8): u8 {
     if (n < min) {
       min
@@ -863,26 +869,52 @@ module basecamp::basecamp {
   ================================
   */
   #[view]
-  public fun get_basecamp(basecamp_address: address): (
-    bool, 
-    u64, 
-    Weather, 
-    u64, 
-    vector<Thing>, 
-    vector<Thing>, 
-    ) acquires Basecamp {
-      let basecamp = borrow_global<Basecamp>(basecamp_address);
-      (basecamp.live, 
-      basecamp.gold,
-      basecamp.weather,
-      basecamp.location,
-      basecamp.store_items,
-      basecamp.owned_items
-      )
+  public fun get_basecamp_live_status(
+    basecamp_address: address
+  ): bool acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.live
   }
 
   #[view]
-  public fun get_store_items(
+  public fun get_basecamp_gold_count(
+    basecamp_address: address
+  ): u64 acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.gold
+  }
+
+  #[view]
+  public fun get_basecamp_crew(
+    basecamp_address: address
+    ): Table<u64, Crew> acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.crew
+  }
+
+  #[view]
+  public fun get_basecamp_weather(
+    basecamp_address: address
+  ): Weather acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.weather
+  }
+
+  #[view]
+  public fun get_basecamp_location(
+    basecamp_address: address
+  ): u64 acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.location
+  }
+
+  #[view]
+  public fun get_basecamp_store_items(
     basecamp_address: address
     ): vector<Thing> acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
@@ -891,12 +923,21 @@ module basecamp::basecamp {
   }
 
   #[view]
-  public fun get_owned_items(
+  public fun get_basecamp_owned_items(
     basecamp_address: address
     ): vector<Thing> acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let basecamp = borrow_global<Basecamp>(basecamp_address);
     basecamp.owned_items
+  }
+
+  #[view]
+  public fun get_world_map(
+    basecamp_address: address
+    ): Table<u64, Position> acquires Basecamp {
+    check_basecamp_exist_and_crew_alive(basecamp_address);
+    let basecamp = borrow_global<Basecamp>(basecamp_address);
+    basecamp.world
   }
   
   /*
@@ -914,5 +955,6 @@ module basecamp::basecamp {
   public(friend) fun create_basecamp_internal_for_testing(developer: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
       create_basecamp_internal(developer, crew_count)
   }
+
 
 }

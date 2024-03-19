@@ -52,24 +52,36 @@ module basecamp::basecamp_test {
         debug::print(&string::utf8(b"Basecamp Address"));
         debug::print(&basecamp_address);
 
-        let (live, gold, weather, location, store_items, owned_items) = basecamp::get_basecamp(basecamp_address);
+        let owned_items = basecamp::get_basecamp_owned_items(basecamp_address);
+        debug::print(&string::utf8(b"owned_items: "));
+        debug::print(&owned_items);
 
-        debug::print(&string::utf8(b"Live: "));
-        debug::print(&live);
-
-        debug::print(&string::utf8(b"Gold: "));
-        debug::print(&gold);
-
-        debug::print(&string::utf8(b"Weather: "));
-        debug::print(&weather);
-
-        debug::print(&string::utf8(b"Location: "));
-        debug::print(&location);
-
-        debug::print(&string::utf8(b"Store Items: "));
+        let store_items = basecamp::get_basecamp_store_items(basecamp_address);
+        debug::print(&string::utf8(b"store_items: "));
         debug::print(&store_items);
 
-        debug::print(&string::utf8(b"Owned Items: "));
-        debug::print(&owned_items);
+        let location = basecamp::get_basecamp_location(basecamp_address);
+        debug::print(&string::utf8(b"location: "));
+        debug::print(&location);
+
+        let weather = basecamp::get_basecamp_weather(basecamp_address);
+        debug::print(&string::utf8(b"weather: "));
+        debug::print(&weather);
+
+        let crew = basecamp::get_basecamp_crew(basecamp_address);
+        debug::print(&string::utf8(b"crew: "));
+        debug::print(&crew);
+
+        let gold = basecamp::get_basecamp_gold_count(basecamp_address);
+        debug::print(&string::utf8(b"gold: "));
+        debug::print(&gold);
+
+        let live = basecamp::get_basecamp_live_status(basecamp_address);
+        debug::print(&string::utf8(b"live: "));
+        debug::print(&live);
+
+        let world = basecamp::get_world_map(basecamp_address);
+        debug::print(&string::utf8(b"world: "));
+        debug::print(&world);
     }
 }
