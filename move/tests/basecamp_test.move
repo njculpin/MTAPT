@@ -28,7 +28,7 @@ module basecamp::basecamp_test {
         randomness::set_seed(x"0000000000000000000000000000000000000000000000000000000000000000");
         debug::print(&string::utf8(b"Randomness setup"));
 
-        basecamp::init_module_for_testing(basecamp);
+        basecamp::init_module_test(basecamp);
         debug::print(&string::utf8(b"Initalized"));
 
         account::create_account_for_test(signer::address_of(aptos_fx));
@@ -41,13 +41,13 @@ module basecamp::basecamp_test {
         aptos_fx = @aptos_framework,
         sender = @0xA001
     )]
-    fun create_basecamp(
+    fun create_basecamp_test(
         basecamp: &signer,
         aptos_fx: &signer,
         sender: &signer,
     ){
         setup_test(basecamp, aptos_fx, sender);
-        let basecamp_address = basecamp::create_basecamp_internal_for_testing(sender, 5);
+        let basecamp_address = basecamp::create_basecamp_internal_test(sender, 5);
 
         debug::print(&string::utf8(b"Basecamp Address"));
         debug::print(&basecamp_address);
@@ -87,5 +87,24 @@ module basecamp::basecamp_test {
         let world = basecamp::get_world_map_location(basecamp_address, location);
         debug::print(&string::utf8(b"world: "));
         debug::print(&world);
+    }
+
+    #[test(
+        basecamp = @basecamp,
+        aptos_fx = @aptos_framework,
+        sender = @0xA001
+    )]
+    fun move_crew_member_test(
+        basecamp: &signer,
+        aptos_fx: &signer,
+        sender: &signer,
+    ){
+        setup_test(basecamp, aptos_fx, sender);
+        let basecamp_address = basecamp::create_basecamp_internal_test(sender, 5);
+
+        debug::print(&string::utf8(b"Basecamp Address"));
+        debug::print(&basecamp_address);
+        basecamp::move_crew_member_test(basecamp_address, 1, 1, 0);
+        debug::print(&string::utf8(b"Crew Member Moved"));
     }
 }

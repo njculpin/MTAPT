@@ -435,15 +435,31 @@ module basecamp::basecamp {
   fun next_weather(basecamp_address: address): Weather acquires Basecamp {
     check_basecamp_exist_and_crew_alive(basecamp_address);
     let weather = &mut borrow_global_mut<Basecamp>(basecamp_address).weather;
+
     let temp_ref = &mut weather.temp;
-    let new_temp = randomness::u8_range(*temp_ref - 5, *temp_ref + 5);
+    let low_temp = MIN_TEMP;
+    if (*temp_ref > 5){
+      low_temp = *temp_ref - 5;
+    };
+    let new_temp = randomness::u8_range(low_temp, *temp_ref + 5);
     *temp_ref = clamp_value(new_temp, MIN_TEMP, MAX_TEMP);
+
     let rain_ref = &mut weather.rain;
-    let new_rain = randomness::u8_range(*rain_ref - 5, *rain_ref + 5);
+    let low_rain = MIN_RAIN;
+    if (*rain_ref > 5){
+      low_rain = *rain_ref - 5;
+    };
+    let new_rain = randomness::u8_range(low_rain, *rain_ref + 5);
     *rain_ref = clamp_value(new_rain, MIN_RAIN, MAX_RAIN);
+
     let wind_ref = &mut weather.wind;
-    let new_wind = randomness::u8_range(*wind_ref - 5, *wind_ref + 5);
+    let low_wind = MIN_WIND;
+    if (*wind_ref > 5){
+      low_wind = *wind_ref - 5;
+    };
+    let new_wind = randomness::u8_range(low_wind, *wind_ref + 5);
     *wind_ref = clamp_value(new_wind, MIN_WIND, MAX_WIND);
+
     borrow_global<Basecamp>(basecamp_address).weather
   }
 
@@ -960,14 +976,24 @@ module basecamp::basecamp {
   ================================
   */
   #[test_only]
-  public(friend) fun init_module_for_testing(developer: &signer) {
+  public(friend) fun init_module_test(developer: &signer) {
       account::create_account_for_test(address_of(developer));
       init_module(developer)
   }
 
   #[test_only]
-  public(friend) fun create_basecamp_internal_for_testing(developer: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
+  public(friend) fun create_basecamp_internal_test(developer: &signer, crew_count: u8): address acquires CollectionCapability, MintBasecampEvents {
       create_basecamp_internal(developer, crew_count)
+  }
+
+  #[test_only]
+  public(friend) fun move_crew_member_test(
+    basecamp_address: address, 
+    direction: u8, 
+    distance: u64, 
+    crew_id: u64
+    ) acquires Basecamp {
+      move_crew_member(basecamp_address, direction, distance, crew_id)
   }
 
 
